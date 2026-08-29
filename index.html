@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>堀さんと宮村くん 全話リスト</title>
+<meta name="robots" content="noindex, nofollow, noarchive">
+<meta name="googlebot" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;600;700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EEE9DC;
+    --paper-line:#C9BFA8;
+    --ink:#2A2620;
+    --ink-soft:#6B6455;
+    --stamp-red:#AA3B2E;
+    --stamp-red-soft:#AA3B2E22;
+    --ledger-green:#4B6357;
+    --card-bg:#F7F4EA;
+    --border:#D8CFB8;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  html{ background-color:#ffc600; }
+  body{
+    background-color:#ffc600;
+    color:var(--ink);
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    min-height:100vh;
+  }
+  .margin-rule{
+    display:none;
+  }
+  @media (max-width:600px){ .margin-rule{ left:34px; } }
+
+  header{
+    position:sticky; top:0; z-index:20;
+    background-color:#ffc600;
+    padding:28px 20px 14px 20px;
+  }
+  @media (max-width:600px){ header{ padding:22px 20px 12px 20px; } }
+
+  .eyebrow{
+    font-size:12px; letter-spacing:.24em; color:#AA3B2E;
+    font-weight:700; text-transform:uppercase; margin-bottom:6px;
+  }
+  h1{
+    font-family:'Shippori Mincho', serif;
+    font-weight:800;
+    font-size:clamp(26px,4vw,38px);
+    margin:0 0 4px 0;
+    line-height:1.25;
+    letter-spacing:.02em;
+  }
+  .sub{
+    color:var(--ink-soft); font-size:13.5px; margin:0 0 18px 0;
+  }
+
+  .controls-row{
+    display:flex; align-items:center; gap:12px; flex-wrap:nowrap;
+  }
+  .search-row{
+    display:flex; align-items:center; gap:10px;
+    background:var(--card-bg);
+    border:1px solid var(--border);
+    border-radius:3px;
+    padding:10px 14px;
+    flex:1 1 auto;
+    min-width:0;
+  }
+  .search-row svg{ flex:none; color:var(--ink-soft); }
+  .search-row input{
+    border:none; outline:none; background:transparent;
+    font-family:inherit; font-size:15px; color:var(--ink); width:100%;
+  }
+  .search-row input::placeholder{ color:#9c9484; }
+  .count{
+    font-size:12px; color:var(--ink-soft); white-space:nowrap; font-variant-numeric:tabular-nums;
+  }
+
+  main{ padding:6px 20px 30px 20px; position:relative; z-index:1; background-color:#ffc600; }
+  @media (max-width:600px){ main{ padding:6px 20px 30px 20px; } }
+
+  .group{ margin-top:26px; }
+  .group-head{
+    display:flex; align-items:baseline; gap:10px;
+    margin:0 0 10px 0; padding-bottom:6px;
+    border-bottom:1px dashed #7A6A3D;
+  }
+  .group-head .num{
+    font-family:'Shippori Mincho', serif; font-weight:700;
+    font-size:15px; color:#AA3B2E;
+  }
+  .group-head .range{
+    font-size:12px; color:var(--ink-soft); letter-spacing:.05em;
+  }
+
+  ul.list{ list-style:none; margin:0; padding:0; }
+  li.entry{
+    display:block;
+  }
+  a.row{
+    display:flex; align-items:center; gap:14px;
+    text-decoration:none; color:var(--ink);
+    padding:9px 8px 9px 2px;
+    border-bottom:1px dotted #7A6A3D;
+    transition:background .12s ease, padding-left .12s ease;
+  }
+  a.row:hover, a.row:focus-visible{
+    background:var(--stamp-red-soft);
+    padding-left:8px;
+    outline:none;
+  }
+  a.row:focus-visible{ box-shadow: inset 2px 0 0 var(--stamp-red); }
+  a.row.is-read{ opacity:0.5; }
+
+  .stamp{
+    flex:none;
+    width:34px; height:34px;
+    border-radius:50%;
+    border:none;
+    background-color:#BC5A46;
+    color:#fff;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Shippori Mincho', serif;
+    font-weight:700; font-size:12.5px;
+    font-variant-numeric:tabular-nums;
+  }
+  .title{
+    font-family:'Shippori Mincho', serif;
+    font-size:16.5px; font-weight:500;
+    flex:1;
+    letter-spacing:.01em;
+  }
+  .go{
+    flex:none; color:#5A4A1F; opacity:.75; font-size:13px;
+  }
+  a.row:hover .go{ opacity:1; color:var(--stamp-red); }
+
+  .sort-row{
+    display:flex; align-items:center; gap:8px; flex-wrap:nowrap; flex:none;
+  }
+  .sort-label{ font-size:12px; color:var(--ink-soft); white-space:nowrap; }
+  .sort-btn{
+    font-family:inherit; font-size:12.5px; font-weight:700;
+    background:var(--card-bg); border:1px solid var(--border);
+    border-radius:3px; padding:6px 12px; cursor:pointer; color:var(--ink-soft);
+    white-space:nowrap;
+  }
+  .sort-btn:hover{ background:var(--stamp-red-soft); }
+  .sort-btn.active{
+    background:#BC5A46; border-color:#BC5A46; color:#fff;
+  }
+  @media (max-width:600px){
+    .sort-label{ display:none; }
+    .sort-btn{ padding:6px 9px; font-size:11.5px; }
+    .search-row input{ font-size:14px; }
+  }
+
+  .empty{
+    margin-top:60px; text-align:center; color:var(--ink-soft);
+    font-family:'Shippori Mincho', serif; font-size:15px;
+  }
+
+  footer{
+    padding:20px 20px 40px 20px; color:#AA3B2E; font-size:11.5px;
+    position:relative; z-index:1; background-color:#ffc600;
+  }
+  footer a{ color:var(--ledger-green); }
+</style>
+</head>
+<body>
+  <div class="margin-rule"></div>
+  <header>
+    <div class="eyebrow">目次帳 — Index</div>
+    <h1>堀さんと宮村くん 全話リスト</h1>
+    <p class="sub">タップすると原作ページ(dka-hero.me)を新しいタブで開きます。番号またはタイトルで検索できます。</p>
+    <div class="controls-row">
+      <div class="search-row">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input id="search" type="text" placeholder="検索" autocomplete="off">
+        <span class="count" id="count"></span>
+      </div>
+      <div class="sort-row">
+        <span class="sort-label">並び順:</span>
+        <button type="button" class="sort-btn" id="sortAsc" data-order="asc">古い順</button>
+        <button type="button" class="sort-btn" id="sortDesc" data-order="desc">新しい順</button>
+      </div>
+    </div>
+  </header>
+  <main id="main"></main>
+  <footer>
+    全613話 &middot; 原作: <a href="https://dka-hero.me/h_02.html" target="_blank" rel="noopener">dka-hero.me</a>(HERO氏)&middot; 画像は複製せず、各話は原作サイトへリンクしています。
+  </footer>
+
+<script>
+const FALLBACK_DATA = [{"num": 1, "title": "堀さんと宮村くん", "url": "https://dka-hero.me/hm001_030/pict_com_004.html"}, {"num": 2, "title": "時間の共有", "url": "https://dka-hero.me/hm001_030/pict_com_006.html"}, {"num": 3, "title": "かわいい", "url": "https://dka-hero.me/hm001_030/pict_com_008.html"}, {"num": 4, "title": "石川くん", "url": "https://dka-hero.me/hm001_030/pict_com_009.html"}, {"num": 5, "title": "自己紹介", "url": "https://dka-hero.me/hm001_030/pict_com_010.html"}, {"num": 6, "title": "おめでとう３月", "url": "https://dka-hero.me/hm001_030/pict_com_011.html"}, {"num": 7, "title": "新学期", "url": "https://dka-hero.me/hm001_030/pict_com_012.html"}, {"num": 8, "title": "ストレス、そして解消", "url": "https://dka-hero.me/hm001_030/pict_com_013.html"}, {"num": 9, "title": "お大事に", "url": "https://dka-hero.me/hm001_030/pict_com_014.html"}, {"num": 10, "title": "仙石会長と愉快な仲間", "url": "https://dka-hero.me/hm001_030/pict_com_015.html"}, {"num": 11, "title": "伊澄少年", "url": "https://dka-hero.me/hm001_030/pict_com_017.html"}, {"num": 12, "title": "突然の雨", "url": "https://dka-hero.me/hm001_030/pict_com_018.html"}, {"num": 13, "title": "カット", "url": "https://dka-hero.me/hm001_030/pict_com_019.html"}, {"num": 14, "title": "わからずや", "url": "https://dka-hero.me/hm001_030/pict_com_020.html"}, {"num": 15, "title": "好きだ", "url": "https://dka-hero.me/hm001_030/pict_com_021.html"}, {"num": 16, "title": "大丈夫", "url": "https://dka-hero.me/hm001_030/pict_com_022.html"}, {"num": 17, "title": "好物", "url": "https://dka-hero.me/hm001_030/pict_com_023.html"}, {"num": 18, "title": "折れちゃった", "url": "https://dka-hero.me/hm001_030/pict_com_024.html"}, {"num": 19, "title": "緑、白、赤", "url": "https://dka-hero.me/hm001_030/pict_com_025.html"}, {"num": 20, "title": "アルバム", "url": "https://dka-hero.me/hm001_030/pict_com_026.html"}, {"num": 21, "title": "うりうり", "url": "https://dka-hero.me/hm001_030/pict_com_027.html"}, {"num": 22, "title": "レミとさくら", "url": "https://dka-hero.me/hm001_030/pict_com_028.html"}, {"num": 23, "title": "避妊", "url": "https://dka-hero.me/hm001_030/pict_com_030.html"}, {"num": 24, "title": "進藤晃一", "url": "https://dka-hero.me/hm001_030/pict_com_031.html"}, {"num": 25, "title": "パチコー", "url": "https://dka-hero.me/hm001_030/pict_com_032.html"}, {"num": 26, "title": "夏風邪", "url": "https://dka-hero.me/hm001_030/pict_com_033.html"}, {"num": 27, "title": "SOS", "url": "https://dka-hero.me/hm001_030/pict_com_035.html"}, {"num": 28, "title": "キログラム", "url": "https://dka-hero.me/hm001_030/pict_com_036.html"}, {"num": 29, "title": "後退と", "url": "https://dka-hero.me/hm001_030/pict_com_037.html"}, {"num": 30, "title": "灰色の男", "url": "https://dka-hero.me/hm001_030/pict_com_038.html"}, {"num": 31, "title": "透きとおる", "url": "https://dka-hero.me/hm031_060/pict_com_039.html"}, {"num": 32, "title": "真夏日", "url": "https://dka-hero.me/hm031_060/pict_com_040.html"}, {"num": 33, "title": "味", "url": "https://dka-hero.me/hm031_060/pict_com_042.html"}, {"num": 34, "title": "桜色クッキー", "url": "https://dka-hero.me/hm031_060/pict_com_043.html"}, {"num": 35, "title": "いらっしゃいませ", "url": "https://dka-hero.me/hm031_060/pict_com_044.html"}, {"num": 36, "title": "フェチ", "url": "https://dka-hero.me/hm031_060/pict_com_045.html"}, {"num": 37, "title": "泣きぼくろ", "url": "https://dka-hero.me/hm031_060/pict_com_046.html"}, {"num": 38, "title": "妹", "url": "https://dka-hero.me/hm031_060/pict_com_047.html"}, {"num": 39, "title": "世話焼き彼女", "url": "https://dka-hero.me/hm031_060/pict_com_048.html"}, {"num": 40, "title": "お風呂に入ろう", "url": "https://dka-hero.me/hm031_060/pict_com_049.html"}, {"num": 41, "title": "オフ", "url": "https://dka-hero.me/hm031_060/pict_com_050.html"}, {"num": 42, "title": "満腹", "url": "https://dka-hero.me/hm031_060/pict_com_051.html"}, {"num": 43, "title": "父の休日", "url": "https://dka-hero.me/hm031_060/pict_com_052.html"}, {"num": 44, "title": "君に期待", "url": "https://dka-hero.me/hm031_060/pict_com_053.html"}, {"num": 45, "title": "堀くんと小柳さん", "url": "https://dka-hero.me/hm031_060/pict_com_054.html"}, {"num": 46, "title": "邪魔しないで", "url": "https://dka-hero.me/hm031_060/pict_com_055.html"}, {"num": 47, "title": "６回", "url": "https://dka-hero.me/hm031_060/pict_com_056.html"}, {"num": 48, "title": "記憶をかける", "url": "https://dka-hero.me/hm031_060/pict_com_057.html"}, {"num": 49, "title": "冷たい音", "url": "https://dka-hero.me/hm031_060/pict_com_058.html"}, {"num": 50, "title": "犬みたい", "url": "https://dka-hero.me/hm031_060/pict_com_059.html"}, {"num": 51, "title": "休み明け", "url": "https://dka-hero.me/hm031_060/pict_com_060.html"}, {"num": 52, "title": "喧嘩日和", "url": "https://dka-hero.me/hm031_060/pict_com_061.html"}, {"num": 53, "title": "居候", "url": "https://dka-hero.me/hm031_060/pict_com_062.html"}, {"num": 54, "title": "テトリス", "url": "https://dka-hero.me/hm031_060/pict_com_063.html"}, {"num": 55, "title": "５日間", "url": "https://dka-hero.me/hm031_060/pict_com_064.html"}, {"num": 56, "title": "教えて井浦くん", "url": "https://dka-hero.me/hm031_060/pict_com_065.html"}, {"num": 57, "title": "チキン", "url": "https://dka-hero.me/hm031_060/pict_com_066.html"}, {"num": 58, "title": "言えない", "url": "https://dka-hero.me/hm031_060/pict_com_067.html"}, {"num": 59, "title": "要望", "url": "https://dka-hero.me/hm031_060/pict_com_068.html"}, {"num": 60, "title": "お隣", "url": "https://dka-hero.me/hm031_060/pict_com_069.html"}, {"num": 61, "title": "鬼", "url": "https://dka-hero.me/hm061_090/pict_com_070.html"}, {"num": 62, "title": "足蹴", "url": "https://dka-hero.me/hm061_090/pict_com_071.html"}, {"num": 63, "title": "ピザ", "url": "https://dka-hero.me/hm061_090/pict_com_072.html"}, {"num": 64, "title": "優しい人", "url": "https://dka-hero.me/hm061_090/pict_com_073.html"}, {"num": 65, "title": "伊織", "url": "https://dka-hero.me/hm061_090/pict_com_074.html"}, {"num": 66, "title": "弱い強さ", "url": "https://dka-hero.me/hm061_090/pict_com_075.html"}, {"num": 67, "title": "高級食材", "url": "https://dka-hero.me/hm061_090/pict_com_076.html"}, {"num": 68, "title": "AMの幻", "url": "https://dka-hero.me/hm061_090/pict_com_077.html"}, {"num": 69, "title": "石川＋２匹", "url": "https://dka-hero.me/hm061_090/pict_com_078.html"}, {"num": 70, "title": "ギャップ", "url": "https://dka-hero.me/hm061_090/pict_com_079.html"}, {"num": 71, "title": "鼻血", "url": "https://dka-hero.me/hm061_090/pict_com_080.html"}, {"num": 72, "title": "明るい音のする方に", "url": "https://dka-hero.me/hm061_090/pict_com_081.html"}, {"num": 73, "title": "パズルとピース", "url": "https://dka-hero.me/hm061_090/pict_com_082.html"}, {"num": 74, "title": "捨ててまで", "url": "https://dka-hero.me/hm061_090/pict_com_083.html"}, {"num": 75, "title": "真っ青な罪", "url": "https://dka-hero.me/hm061_090/pict_com_084.html"}, {"num": 76, "title": "落葉舞う", "url": "https://dka-hero.me/hm061_090/pict_com_085.html"}, {"num": 77, "title": "経て、辿り着かずに", "url": "https://dka-hero.me/hm061_090/pict_com_086.html"}, {"num": 78, "title": "殺意", "url": "https://dka-hero.me/hm061_090/pict_com_087.html"}, {"num": 79, "title": "正午", "url": "https://dka-hero.me/hm061_090/pict_com_088.html"}, {"num": 80, "title": "吉川姉妹", "url": "https://dka-hero.me/hm061_090/pict_com_089.html"}, {"num": 81, "title": "絡まって", "url": "https://dka-hero.me/hm061_090/pict_com_090.html"}, {"num": 82, "title": "みかん", "url": "https://dka-hero.me/hm061_090/pict_com_091.html"}, {"num": 83, "title": "飼育", "url": "https://dka-hero.me/hm061_090/pict_com_092.html"}, {"num": 84, "title": "カベ", "url": "https://dka-hero.me/hm061_090/pict_com_093.html"}, {"num": 85, "title": "私たちの恋人ごっこ", "url": "https://dka-hero.me/hm061_090/pict_com_094.html"}, {"num": 86, "title": "ユキ", "url": "https://dka-hero.me/hm061_090/pict_com_095.html"}, {"num": 87, "title": "春が来る理由", "url": "https://dka-hero.me/hm061_090/pict_com_096.html"}, {"num": 88, "title": "君じゃ無理", "url": "https://dka-hero.me/hm061_090/pict_com_097.html"}, {"num": 89, "title": "ゲームドリーマー", "url": "https://dka-hero.me/hm061_090/pict_com_098.html"}, {"num": 90, "title": "手のひらの穴", "url": "https://dka-hero.me/hm061_090/pict_com_099.html"}, {"num": 91, "title": "浮気メール", "url": "https://dka-hero.me/hm091_120/pict_com_100.html"}, {"num": 92, "title": "二人の約束", "url": "https://dka-hero.me/hm091_120/pict_com_101.html"}, {"num": 93, "title": "仙石式", "url": "https://dka-hero.me/hm091_120/pict_com_102.html"}, {"num": 94, "title": "彼のクセ", "url": "https://dka-hero.me/hm091_120/pict_com_103.html"}, {"num": 95, "title": "初雪", "url": "https://dka-hero.me/hm091_120/pict_com_104.html"}, {"num": 96, "title": "密", "url": "https://dka-hero.me/hm091_120/pict_com_105.html"}, {"num": 97, "title": "雨音は響かず、止まず", "url": "https://dka-hero.me/hm091_120/pict_com_106.html"}, {"num": 98, "title": "アサミ", "url": "https://dka-hero.me/hm091_120/pict_com_107.html"}, {"num": 99, "title": "角の席", "url": "https://dka-hero.me/hm091_120/pict_com_108.html"}, {"num": 100, "title": "通り道", "url": "https://dka-hero.me/hm091_120/pict_com_109.html"}, {"num": 101, "title": "君へ宿題", "url": "https://dka-hero.me/hm091_120/pict_com_112.html"}, {"num": 102, "title": "谷原兄弟", "url": "https://dka-hero.me/hm091_120/pict_com_113.html"}, {"num": 103, "title": "お年玉", "url": "https://dka-hero.me/hm091_120/pict_com_114.html"}, {"num": 104, "title": "兄のマフラー", "url": "https://dka-hero.me/hm091_120/pict_com_115.html"}, {"num": 105, "title": "一人っ子", "url": "https://dka-hero.me/hm091_120/pict_com_116.html"}, {"num": 106, "title": "セピア", "url": "https://dka-hero.me/hm091_120/pict_com_117.html"}, {"num": 107, "title": "わからないよね", "url": "https://dka-hero.me/hm091_120/pict_com_118.html"}, {"num": 108, "title": "ワックス", "url": "https://dka-hero.me/hm091_120/pict_com_119.html"}, {"num": 109, "title": "仄かに暗闇", "url": "https://dka-hero.me/hm091_120/pict_com_120.html"}, {"num": 110, "title": "嗅覚", "url": "https://dka-hero.me/hm091_120/pict_com_121.html"}, {"num": 111, "title": "既視感", "url": "https://dka-hero.me/hm091_120/pict_com_122.html"}, {"num": 112, "title": "そして日付変更", "url": "https://dka-hero.me/hm091_120/pict_com_123.html"}, {"num": 113, "title": "教室故障", "url": "https://dka-hero.me/hm091_120/pict_com_124.html"}, {"num": 114, "title": "保健室にて", "url": "https://dka-hero.me/hm091_120/pict_com_125.html"}, {"num": 115, "title": "三叉路", "url": "https://dka-hero.me/hm091_120/pict_com_126.html"}, {"num": 116, "title": "いっくん", "url": "https://dka-hero.me/hm091_120/pict_com_127.html"}, {"num": 117, "title": "パニック", "url": "https://dka-hero.me/hm091_120/pict_com_128.html"}, {"num": 118, "title": "震動", "url": "https://dka-hero.me/hm091_120/pict_com_129.html"}, {"num": 119, "title": "ノンコミタル", "url": "https://dka-hero.me/hm091_120/pict_com_130.html"}, {"num": 120, "title": "寄寓", "url": "https://dka-hero.me/hm091_120/pict_com_131.html"}, {"num": 121, "title": "安田先生", "url": "https://dka-hero.me/hm121_150/pict_com_132.html"}, {"num": 122, "title": "甘い計画", "url": "https://dka-hero.me/hm121_150/pict_com_133.html"}, {"num": 123, "title": "２月１４日", "url": "https://dka-hero.me/hm121_150/pict_com_134.html"}, {"num": 124, "title": "BlackList", "url": "https://dka-hero.me/hm121_150/pict_com_135.html"}, {"num": 125, "title": "苦手", "url": "https://dka-hero.me/hm121_150/pict_com_136.html"}, {"num": 126, "title": "宮村家", "url": "https://dka-hero.me/hm121_150/pict_com_137.html"}, {"num": 127, "title": "チャイルド", "url": "https://dka-hero.me/hm121_150/pict_com_138.html"}, {"num": 128, "title": "夏合宿", "url": "https://dka-hero.me/hm121_150/pict_com_139.html"}, {"num": 129, "title": "放課後", "url": "https://dka-hero.me/hm121_150/pict_com_140.html"}, {"num": 130, "title": "あかねくん", "url": "https://dka-hero.me/hm121_150/pict_com_141.html"}, {"num": 131, "title": "修学旅行", "url": "https://dka-hero.me/hm121_150/pict_com_142.html"}, {"num": 132, "title": "上も、下も", "url": "https://dka-hero.me/hm121_150/pict_com_143.html"}, {"num": 133, "title": "進路", "url": "https://dka-hero.me/hm121_150/pict_com_144.html"}, {"num": 134, "title": "一方通行", "url": "https://dka-hero.me/hm121_150/pict_com_145.html"}, {"num": 135, "title": "防音", "url": "https://dka-hero.me/hm121_150/pict_com_146.html"}, {"num": 136, "title": "いってきます", "url": "https://dka-hero.me/hm121_150/pict_com_147.html"}, {"num": 137, "title": "春先", "url": "https://dka-hero.me/hm121_150/pict_com_148.html"}, {"num": 138, "title": "赤ずきん", "url": "https://dka-hero.me/hm121_150/pict_com_149.html"}, {"num": 139, "title": "お持ち帰り", "url": "https://dka-hero.me/hm121_150/pict_com_150.html"}, {"num": 140, "title": "卒業", "url": "https://dka-hero.me/hm121_150/pict_com_151.html"}, {"num": 141, "title": "暗い子/不用品", "url": "https://dka-hero.me/hm121_150/pict_com_157.html"}, {"num": 142, "title": "女子の部屋/高校", "url": "https://dka-hero.me/hm121_150/pict_com_158.html"}, {"num": 143, "title": "心配性/興味", "url": "https://dka-hero.me/hm121_150/pict_com_159.html"}, {"num": 144, "title": "明日世界が終わる日の、今日", "url": "https://dka-hero.me/hm121_150/pict_com_160.html"}, {"num": 145, "title": "おさがり/おさがり２", "url": "https://dka-hero.me/hm121_150/pict_com_161.html"}, {"num": 146, "title": "うつつ/盗撮", "url": "https://dka-hero.me/hm121_150/pict_com_162.html"}, {"num": 147, "title": "容量オーバー/骨まで", "url": "https://dka-hero.me/hm121_150/pict_com_163.html"}, {"num": 148, "title": "記号化", "url": "https://dka-hero.me/hm121_150/pict_com_164.html"}, {"num": 149, "title": "15回", "url": "https://dka-hero.me/hm121_150/pict_com_165.html"}, {"num": 150, "title": "カマキリ", "url": "https://dka-hero.me/hm121_150/pict_com_166.html"}, {"num": 151, "title": "眠り姫", "url": "https://dka-hero.me/hm151_180/pict_com_167.html"}, {"num": 152, "title": "アフター/息切れ", "url": "https://dka-hero.me/hm151_180/pict_com_168.html"}, {"num": 153, "title": "プール！", "url": "https://dka-hero.me/hm151_180/pict_com_169.html"}, {"num": 154, "title": "おてて/肌と汗", "url": "https://dka-hero.me/hm151_180/pict_com_170.html"}, {"num": 155, "title": "ロフト", "url": "https://dka-hero.me/hm151_180/pict_com_171.html"}, {"num": 156, "title": "そばづえ", "url": "https://dka-hero.me/hm151_180/pict_com_172.html"}, {"num": 157, "title": "G/ソプラノ", "url": "https://dka-hero.me/hm151_180/pict_com_173.html"}, {"num": 158, "title": "知らない人", "url": "https://dka-hero.me/hm151_180/pict_com_174.html"}, {"num": 159, "title": "無痛の傷口", "url": "https://dka-hero.me/hm151_180/pict_com_175.html"}, {"num": 160, "title": "炎天下", "url": "https://dka-hero.me/hm151_180/pict_com_176.html"}, {"num": 161, "title": "チャイム/おかえり井浦君", "url": "https://dka-hero.me/hm151_180/pict_com_177.html"}, {"num": 162, "title": "中間考査", "url": "https://dka-hero.me/hm151_180/pict_com_178.html"}, {"num": 163, "title": "いじわる/英和辞書", "url": "https://dka-hero.me/hm151_180/pict_com_179.html"}, {"num": 164, "title": "梅雨、彼女、湿気、彼", "url": "https://dka-hero.me/hm151_180/pict_com_180.html"}, {"num": 165, "title": "オンライン", "url": "https://dka-hero.me/hm151_180/pict_com_182.html"}, {"num": 166, "title": "生徒会/コンティニュー", "url": "https://dka-hero.me/hm151_180/pict_com_183.html"}, {"num": 167, "title": "エレベーター", "url": "https://dka-hero.me/hm151_180/pict_com_184.html"}, {"num": 168, "title": "バス待ち/しつけ", "url": "https://dka-hero.me/hm151_180/pict_com_185.html"}, {"num": 169, "title": "１時の部屋", "url": "https://dka-hero.me/hm151_180/pict_com_186.html"}, {"num": 170, "title": "彼について", "url": "https://dka-hero.me/hm151_180/pict_com_187.html"}, {"num": 171, "title": "おとうとくん/王様", "url": "https://dka-hero.me/hm151_180/pict_com_188.html"}, {"num": 172, "title": "有無/路上三者面談", "url": "https://dka-hero.me/hm151_180/pict_com_189.html"}, {"num": 173, "title": "電車/フレンズ", "url": "https://dka-hero.me/hm151_180/pict_com_190.html"}, {"num": 174, "title": "重ね着/きもだめし", "url": "https://dka-hero.me/hm151_180/pict_com_191.html"}, {"num": 175, "title": "ボタン/貼り紙", "url": "https://dka-hero.me/hm151_180/pict_com_192.html"}, {"num": 176, "title": "ケンカするほど/相談室", "url": "https://dka-hero.me/hm151_180/pict_com_193.html"}, {"num": 177, "title": "高校生A/沢田さん", "url": "https://dka-hero.me/hm151_180/pict_com_194.html"}, {"num": 178, "title": "黒", "url": "https://dka-hero.me/hm151_180/pict_com_195.html"}, {"num": 179, "title": "片桐幼稚園", "url": "https://dka-hero.me/hm151_180/pict_com_196.html"}, {"num": 180, "title": "あくび/トマト", "url": "https://dka-hero.me/hm151_180/pict_com_197.html"}, {"num": 181, "title": "４時の部屋", "url": "https://dka-hero.me/hm181_210/pict_com_198.html"}, {"num": 182, "title": "夢/君を大事に", "url": "https://dka-hero.me/hm181_210/pict_com_199.html"}, {"num": 183, "title": "グッドモーニング/昔話", "url": "https://dka-hero.me/hm181_210/pict_com_200.html"}, {"num": 184, "title": "ヒール/落下", "url": "https://dka-hero.me/hm181_210/pict_com_201.html"}, {"num": 185, "title": "模造刀/中学一年生", "url": "https://dka-hero.me/hm181_210/pict_com_202.html"}, {"num": 186, "title": "家庭的ドS/ケーキ屋の長男", "url": "https://dka-hero.me/hm181_210/pict_com_203.html"}, {"num": 187, "title": "喫煙席", "url": "https://dka-hero.me/hm181_210/pict_com_204.html"}, {"num": 188, "title": "キラキラのゆびわ", "url": "https://dka-hero.me/hm181_210/pict_com_205.html"}, {"num": 189, "title": "３月１０日", "url": "https://dka-hero.me/hm181_210/pict_com_206.html"}, {"num": 190, "title": "面食い/疎外", "url": "https://dka-hero.me/hm181_210/pict_com_207.html"}, {"num": 191, "title": "秋津さん/アドバイス", "url": "https://dka-hero.me/hm181_210/pict_com_208.html"}, {"num": 192, "title": "ねばねば/スク水", "url": "https://dka-hero.me/hm181_210/pict_com_209.html"}, {"num": 193, "title": "８時の部屋", "url": "https://dka-hero.me/hm181_210/pict_com_210.html"}, {"num": 194, "title": "付き添い/注意", "url": "https://dka-hero.me/hm181_210/pict_com_211.html"}, {"num": 195, "title": "リミット", "url": "https://dka-hero.me/hm181_210/pict_com_212.html"}, {"num": 196, "title": "下級生/うたたね", "url": "https://dka-hero.me/hm181_210/pict_com_213.html"}, {"num": 197, "title": "夏休み/王子", "url": "https://dka-hero.me/hm181_210/pict_com_214.html"}, {"num": 198, "title": "柳くん/アルコール", "url": "https://dka-hero.me/hm181_210/pict_com_215.html"}, {"num": 199, "title": "アイス", "url": "https://dka-hero.me/hm181_210/pict_com_216.html"}, {"num": 200, "title": "変声期", "url": "https://dka-hero.me/hm181_210/pict_com_217.html"}, {"num": 201, "title": "38度", "url": "https://dka-hero.me/hm181_210/pict_com_218.html"}, {"num": 202, "title": "調理実習/ぐだぐだ", "url": "https://dka-hero.me/hm181_210/pict_com_219.html"}, {"num": 203, "title": "図書館", "url": "https://dka-hero.me/hm181_210/pict_com_220.html"}, {"num": 204, "title": "ヒビ/こずえ", "url": "https://dka-hero.me/hm181_210/pict_com_221.html"}, {"num": 205, "title": "ココア/沢田さんと一緒", "url": "https://dka-hero.me/hm181_210/pict_com_222.html"}, {"num": 206, "title": "自動販売機/創太", "url": "https://dka-hero.me/hm181_210/pict_com_223.html"}, {"num": 207, "title": "吐き気/その程度", "url": "https://dka-hero.me/hm181_210/pict_com_224.html"}, {"num": 208, "title": "ドラッグボーイズ/夕日道", "url": "https://dka-hero.me/hm181_210/pict_com_225.html"}, {"num": 209, "title": "弄ぶ/未だ", "url": "https://dka-hero.me/hm181_210/pict_com_226.html"}, {"num": 210, "title": "写メール/うそつき", "url": "https://dka-hero.me/hm181_210/pict_com_227.html"}, {"num": 211, "title": "吉川妄想/ありかた", "url": "https://dka-hero.me/hm211_240/pict_com_228.html"}, {"num": 212, "title": "だって", "url": "https://dka-hero.me/hm211_240/pict_com_229.html"}, {"num": 213, "title": "仙石さん/拳", "url": "https://dka-hero.me/hm211_240/pict_com_230.html"}, {"num": 214, "title": "仙石さん２/10分", "url": "https://dka-hero.me/hm211_240/pict_com_231.html"}, {"num": 215, "title": "耳/記名", "url": "https://dka-hero.me/hm211_240/pict_com_232.html"}, {"num": 216, "title": "猫と制服", "url": "https://dka-hero.me/hm211_240/pict_com_233.html"}, {"num": 217, "title": "ツボ/いつもと違う", "url": "https://dka-hero.me/hm211_240/pict_com_234.html"}, {"num": 218, "title": "暇つぶし/不機嫌", "url": "https://dka-hero.me/hm211_240/pict_com_235.html"}, {"num": 219, "title": "略/上機嫌", "url": "https://dka-hero.me/hm211_240/pict_com_236.html"}, {"num": 220, "title": "追試にて", "url": "https://dka-hero.me/hm211_240/pict_com_237.html"}, {"num": 221, "title": "強い人/片桐ファイブ", "url": "https://dka-hero.me/hm211_240/pict_com_238.html"}, {"num": 222, "title": "拾得/セーター", "url": "https://dka-hero.me/hm211_240/pict_com_239.html"}, {"num": 223, "title": "日曜日", "url": "https://dka-hero.me/hm211_240/pict_com_240.html"}, {"num": 224, "title": "サル/モバイルフォン", "url": "https://dka-hero.me/hm211_240/pict_com_241.html"}, {"num": 225, "title": "二重人格/双子", "url": "https://dka-hero.me/hm211_240/pict_com_242.html"}, {"num": 226, "title": "いたずら/コタツ", "url": "https://dka-hero.me/hm211_240/pict_com_243.html"}, {"num": 227, "title": "枕/書置き", "url": "https://dka-hero.me/hm211_240/pict_com_244.html"}, {"num": 228, "title": "視聴覚室/14度", "url": "https://dka-hero.me/hm211_240/pict_com_245.html"}, {"num": 229, "title": "うわばき事件", "url": "https://dka-hero.me/hm211_240/pict_com_246.html"}, {"num": 230, "title": "父と息子/中峰", "url": "https://dka-hero.me/hm211_240/pict_com_247.html"}, {"num": 231, "title": "マイペース", "url": "https://dka-hero.me/hm211_240/pict_com_248.html"}, {"num": 232, "title": "販売/ぐーぱ", "url": "https://dka-hero.me/hm211_240/pict_com_249.html"}, {"num": 233, "title": "授業参観", "url": "https://dka-hero.me/hm211_240/pict_com_250.html"}, {"num": 234, "title": "もし君が言うところの、運命なんてものがなかったら", "url": "https://dka-hero.me/hm211_240/pict_com_251.html"}, {"num": 235, "title": "緑/過保護", "url": "https://dka-hero.me/hm211_240/pict_com_252.html"}, {"num": 236, "title": "シンデレラ/縫合", "url": "https://dka-hero.me/hm211_240/pict_com_253.html"}, {"num": 237, "title": "ヘンゼルとグレーテル/そのまま", "url": "https://dka-hero.me/hm211_240/pict_com_254.html"}, {"num": 238, "title": "放課後かくれんぼ", "url": "https://dka-hero.me/hm211_240/pict_com_255.html"}, {"num": 239, "title": "ガチャ/ケーキ", "url": "https://dka-hero.me/hm211_240/pict_com_256.html"}, {"num": 240, "title": "ＳＦＣ/普通", "url": "https://dka-hero.me/hm211_240/pict_com_257.html"}, {"num": 241, "title": "冷たい人", "url": "https://dka-hero.me/hm241_270/pict_com_258.html"}, {"num": 242, "title": "肩車/心", "url": "https://dka-hero.me/hm241_270/pict_com_259.html"}, {"num": 243, "title": "はっきりしない女/罪無き不幸者", "url": "https://dka-hero.me/hm241_270/pict_com_260.html"}, {"num": 244, "title": "ペア/女の子", "url": "https://dka-hero.me/hm241_270/pict_com_261.html"}, {"num": 245, "title": "停電/肉", "url": "https://dka-hero.me/hm241_270/pict_com_262.html"}, {"num": 246, "title": "待ち合わせ/見たい", "url": "https://dka-hero.me/hm241_270/pict_com_263.html"}, {"num": 247, "title": "貧血/生肉", "url": "https://dka-hero.me/hm241_270/pict_com_264.html"}, {"num": 248, "title": "おかあさん/ストレート", "url": "https://dka-hero.me/hm241_270/pict_com_265.html"}, {"num": 249, "title": "ルール/ポニテ", "url": "https://dka-hero.me/hm241_270/pict_com_266.html"}, {"num": 250, "title": "夢の中の話", "url": "https://dka-hero.me/hm241_270/pict_com_267.html"}, {"num": 251, "title": "ブラインド", "url": "https://dka-hero.me/hm241_270/pict_com_268.html"}, {"num": 252, "title": "ポルターガイスト", "url": "https://dka-hero.me/hm241_270/pict_com_269.html"}, {"num": 253, "title": "増量中", "url": "https://dka-hero.me/hm241_270/pict_com_270.html"}, {"num": 254, "title": "つめあわせ１", "url": "https://dka-hero.me/hm241_270/pict_com_271.html"}, {"num": 255, "title": "紫", "url": "https://dka-hero.me/hm241_270/pict_com_272.html"}, {"num": 256, "title": "おもてなし", "url": "https://dka-hero.me/hm241_270/pict_com_273.html"}, {"num": 257, "title": "来る者拒まず、去る者追えず", "url": "https://dka-hero.me/hm241_270/pict_com_274.html"}, {"num": 258, "title": "講習にて/５番と女王", "url": "https://dka-hero.me/hm241_270/pict_com_275.html"}, {"num": 259, "title": "待受/宮村会議", "url": "https://dka-hero.me/hm241_270/pict_com_276.html"}, {"num": 260, "title": "コンプレックス", "url": "https://dka-hero.me/hm241_270/pict_com_277.html"}, {"num": 261, "title": "コンプレックス２", "url": "https://dka-hero.me/hm241_270/pict_com_278.html"}, {"num": 262, "title": "つめあわせ２", "url": "https://dka-hero.me/hm241_270/pict_com_279.html"}, {"num": 263, "title": "あいうえいうら/コウモリ", "url": "https://dka-hero.me/hm241_270/pict_com_280.html"}, {"num": 264, "title": "理解不能/エイリアン", "url": "https://dka-hero.me/hm241_270/pict_com_281.html"}, {"num": 265, "title": "マグマ/レンタルＤＶＤ", "url": "https://dka-hero.me/hm241_270/pict_com_282.html"}, {"num": 266, "title": "朝柳/チーズ地獄", "url": "https://dka-hero.me/hm241_270/pict_com_283.html"}, {"num": 267, "title": "消える男/白衣と教師", "url": "https://dka-hero.me/hm241_270/pict_com_284.html"}, {"num": 268, "title": "抜き打ち検査/ちゅっちゅ", "url": "https://dka-hero.me/hm241_270/pict_com_285.html"}, {"num": 269, "title": "レミちゃん/しっぽ", "url": "https://dka-hero.me/hm241_270/pict_com_286.html"}, {"num": 270, "title": "葛藤/理不尽", "url": "https://dka-hero.me/hm241_270/pict_com_287.html"}, {"num": 271, "title": "ななさい/ななさい２", "url": "https://dka-hero.me/hm271_300/pict_com_288.html"}, {"num": 272, "title": "休日/エアコン", "url": "https://dka-hero.me/hm271_300/pict_com_289.html"}, {"num": 273, "title": "サボテン", "url": "https://dka-hero.me/hm271_300/pict_com_290.html"}, {"num": 274, "title": "おつかい/裏技", "url": "https://dka-hero.me/hm271_300/pict_com_291.html"}, {"num": 275, "title": "真っ赤/せのび", "url": "https://dka-hero.me/hm271_300/pict_com_292.html"}, {"num": 276, "title": "３年１組/壁際の男", "url": "https://dka-hero.me/hm271_300/pict_com_293.html"}, {"num": 277, "title": "ラッキーボーイ/肩", "url": "https://dka-hero.me/hm271_300/pict_com_294.html"}, {"num": 278, "title": "７７７/ままごと", "url": "https://dka-hero.me/hm271_300/pict_com_295.html"}, {"num": 279, "title": "サービスデー/メスネコ", "url": "https://dka-hero.me/hm271_300/pict_com_296.html"}, {"num": 280, "title": "お父さん/いびつ", "url": "https://dka-hero.me/hm271_300/pict_com_297.html"}, {"num": 281, "title": "おはなし/連想", "url": "https://dka-hero.me/hm271_300/pict_com_298.html"}, {"num": 282, "title": "スペース", "url": "https://dka-hero.me/hm271_300/pict_com_299.html"}, {"num": 283, "title": "桜", "url": "https://dka-hero.me/hm271_300/pict_com_300.html"}, {"num": 284, "title": "つめあわせ３", "url": "https://dka-hero.me/hm271_300/pict_com_301.html"}, {"num": 285, "title": "愛/猫の人", "url": "https://dka-hero.me/hm271_300/pict_com_302.html"}, {"num": 286, "title": "春生まれ/朝柳２", "url": "https://dka-hero.me/hm271_300/pict_com_303.html"}, {"num": 287, "title": "変化", "url": "https://dka-hero.me/hm271_300/pict_com_304.html"}, {"num": 288, "title": "般若/つみき", "url": "https://dka-hero.me/hm271_300/pict_com_305.html"}, {"num": 289, "title": "再チャレンジ/里", "url": "https://dka-hero.me/hm271_300/pict_com_306.html"}, {"num": 290, "title": "思い出話", "url": "https://dka-hero.me/hm271_300/pict_com_307.html"}, {"num": 291, "title": "彼女症/７時の部屋", "url": "https://dka-hero.me/hm271_300/pict_com_308.html"}, {"num": 292, "title": "アウト/朝柳３", "url": "https://dka-hero.me/hm271_300/pict_com_309.html"}, {"num": 293, "title": "こだわり/習字", "url": "https://dka-hero.me/hm271_300/pict_com_310.html"}, {"num": 294, "title": "仙石家", "url": "https://dka-hero.me/hm271_300/pict_com_311.html"}, {"num": 295, "title": "真/真２", "url": "https://dka-hero.me/hm271_300/pict_com_312.html"}, {"num": 296, "title": "未知/ポジ", "url": "https://dka-hero.me/hm271_300/pict_com_313.html"}, {"num": 297, "title": "七不思議", "url": "https://dka-hero.me/hm271_300/pict_com_314.html"}, {"num": 298, "title": "父と風呂/井浦さん", "url": "https://dka-hero.me/hm271_300/pict_com_315.html"}, {"num": 299, "title": "寝相/ダイエット", "url": "https://dka-hero.me/hm271_300/pict_com_316.html"}, {"num": 300, "title": "お別れしようか", "url": "https://dka-hero.me/hm271_300/pict_com_317.html"}, {"num": 301, "title": "猫かぶり/かもしれない", "url": "https://dka-hero.me/hm301_330/pict_com_318.html"}, {"num": 302, "title": "二択/脱色", "url": "https://dka-hero.me/hm301_330/pict_com_319.html"}, {"num": 303, "title": "ふざけた男/いない日", "url": "https://dka-hero.me/hm301_330/pict_com_320.html"}, {"num": 304, "title": "花粉草/酢トレッチ", "url": "https://dka-hero.me/hm301_330/pict_com_321.html"}, {"num": 305, "title": "マリー/百点満点", "url": "https://dka-hero.me/hm301_330/pict_com_322.html"}, {"num": 306, "title": "黒猫", "url": "https://dka-hero.me/hm301_330/pict_com_323.html"}, {"num": 307, "title": "つめあわせ４", "url": "https://dka-hero.me/hm301_330/pict_com_324.html"}, {"num": 308, "title": "ランチタイム/バスタイム", "url": "https://dka-hero.me/hm301_330/pict_com_325.html"}, {"num": 309, "title": "ヒヨコ/黒のミステリー", "url": "https://dka-hero.me/hm301_330/pict_com_326.html"}, {"num": 310, "title": "二時間目", "url": "https://dka-hero.me/hm301_330/pict_com_327.html"}, {"num": 311, "title": "小学生/服装検査", "url": "https://dka-hero.me/hm301_330/pict_com_328.html"}, {"num": 312, "title": "クモ/ネタバレ", "url": "https://dka-hero.me/hm301_330/pict_com_329.html"}, {"num": 313, "title": "078号室", "url": "https://dka-hero.me/hm301_330/pict_com_330.html"}, {"num": 314, "title": "黒のミステリー２/冬支度", "url": "https://dka-hero.me/hm301_330/pict_com_331.html"}, {"num": 315, "title": "衣替え/親馬鹿", "url": "https://dka-hero.me/hm301_330/pict_com_332.html"}, {"num": 316, "title": "覇気/嫌いじゃない", "url": "https://dka-hero.me/hm301_330/pict_com_333.html"}, {"num": 317, "title": "透明硝子/お祝い", "url": "https://dka-hero.me/hm301_330/pict_com_334.html"}, {"num": 318, "title": "切り傷/下校時間", "url": "https://dka-hero.me/hm301_330/pict_com_335.html"}, {"num": 319, "title": "かくしごと", "url": "https://dka-hero.me/hm301_330/pict_com_336.html"}, {"num": 320, "title": "鍋", "url": "https://dka-hero.me/hm301_330/pict_com_337.html"}, {"num": 321, "title": "かぶせ/ぎゅ", "url": "https://dka-hero.me/hm301_330/pict_com_338.html"}, {"num": 322, "title": "アイテム/そで", "url": "https://dka-hero.me/hm301_330/pict_com_339.html"}, {"num": 323, "title": "引き裂く/最低", "url": "https://dka-hero.me/hm301_330/pict_com_340.html"}, {"num": 324, "title": "チーズ地獄２/財布", "url": "https://dka-hero.me/hm301_330/pict_com_341.html"}, {"num": 325, "title": "おだんご", "url": "https://dka-hero.me/hm301_330/pict_com_342.html"}, {"num": 326, "title": "テスト対策/怪奇現象", "url": "https://dka-hero.me/hm301_330/pict_com_343.html"}, {"num": 327, "title": "甘さ60点", "url": "https://dka-hero.me/hm301_330/pict_com_344.html"}, {"num": 328, "title": "古紙の日/３人", "url": "https://dka-hero.me/hm301_330/pict_com_345.html"}, {"num": 329, "title": "黒のミステリー３", "url": "https://dka-hero.me/hm301_330/pict_com_346.html"}, {"num": 330, "title": "つめあわせ５", "url": "https://dka-hero.me/hm301_330/pict_com_347.html"}, {"num": 331, "title": "ナンパ/コス", "url": "https://dka-hero.me/hm331_360/pict_com_348.html"}, {"num": 332, "title": "寒い日", "url": "https://dka-hero.me/hm331_360/pict_com_349.html"}, {"num": 333, "title": "ご自由に/発売日", "url": "https://dka-hero.me/hm331_360/pict_com_350.html"}, {"num": 334, "title": "寒中バイト", "url": "https://dka-hero.me/hm331_360/pict_com_351.html"}, {"num": 335, "title": "徹夜プレイ", "url": "https://dka-hero.me/hm331_360/pict_com_352.html"}, {"num": 336, "title": "ちかちゃん", "url": "https://dka-hero.me/hm331_360/pict_com_353.html"}, {"num": 337, "title": "ふうせん", "url": "https://dka-hero.me/hm331_360/pict_com_354.html"}, {"num": 338, "title": "ムカデ/調理実習２", "url": "https://dka-hero.me/hm331_360/pict_com_355.html"}, {"num": 339, "title": "メーター", "url": "https://dka-hero.me/hm331_360/pict_com_356.html"}, {"num": 340, "title": "例えばその手が届いたとして", "url": "https://dka-hero.me/hm331_360/pict_com_357.html"}, {"num": 341, "title": "渡部", "url": "https://dka-hero.me/hm331_360/pict_com_358.html"}, {"num": 342, "title": "靴下/世界を救う者たち", "url": "https://dka-hero.me/hm331_360/pict_com_359.html"}, {"num": 343, "title": "牛乳", "url": "https://dka-hero.me/hm331_360/pict_com_360.html"}, {"num": 344, "title": "舐める/ピアス", "url": "https://dka-hero.me/hm331_360/pict_com_361.html"}, {"num": 345, "title": "ぜんぶいい/めくり", "url": "https://dka-hero.me/hm331_360/pict_com_362.html"}, {"num": 346, "title": "深夜掃除/信じてる", "url": "https://dka-hero.me/hm331_360/pict_com_363.html"}, {"num": 347, "title": "ぺたん/出血", "url": "https://dka-hero.me/hm331_360/pict_com_364.html"}, {"num": 348, "title": "お留守番/お手伝い", "url": "https://dka-hero.me/hm331_360/pict_com_365.html"}, {"num": 349, "title": "携帯/接着", "url": "https://dka-hero.me/hm331_360/pict_com_366.html"}, {"num": 350, "title": "ホラー", "url": "https://dka-hero.me/hm331_360/pict_com_367.html"}, {"num": 351, "title": "校舎見学/買い食い", "url": "https://dka-hero.me/hm331_360/pict_com_368.html"}, {"num": 352, "title": "蚊/汗", "url": "https://dka-hero.me/hm331_360/pict_com_369.html"}, {"num": 353, "title": "深夜メール/絵文字", "url": "https://dka-hero.me/hm331_360/pict_com_370.html"}, {"num": 354, "title": "なっちゃん/体質", "url": "https://dka-hero.me/hm331_360/pict_com_371.html"}, {"num": 355, "title": "プリント", "url": "https://dka-hero.me/hm331_360/pict_com_372.html"}, {"num": 356, "title": "招待/面倒", "url": "https://dka-hero.me/hm331_360/pict_com_373.html"}, {"num": 357, "title": "無人島/通信", "url": "https://dka-hero.me/hm331_360/pict_com_374.html"}, {"num": 358, "title": "古典/50", "url": "https://dka-hero.me/hm331_360/pict_com_375.html"}, {"num": 359, "title": "せきがい線/答案", "url": "https://dka-hero.me/hm331_360/pict_com_376.html"}, {"num": 360, "title": "つめあわせ６", "url": "https://dka-hero.me/hm331_360/pict_com_377.html"}, {"num": 361, "title": "伸縮/柳と桜", "url": "https://dka-hero.me/hm361_390/pict_com_378.html"}, {"num": 362, "title": "笹木先生", "url": "https://dka-hero.me/hm361_390/pict_com_379.html"}, {"num": 363, "title": "脈/指定セーター", "url": "https://dka-hero.me/hm361_390/pict_com_380.html"}, {"num": 364, "title": "かわいいメール", "url": "https://dka-hero.me/hm361_390/pict_com_381.html"}, {"num": 365, "title": "おかしな子", "url": "https://dka-hero.me/hm361_390/pict_com_382.html"}, {"num": 366, "title": "つめあわせ７", "url": "https://dka-hero.me/hm361_390/pict_com_383.html"}, {"num": 367, "title": "一人暮らし/防寒", "url": "https://dka-hero.me/hm361_390/pict_com_384.html"}, {"num": 368, "title": "マルガリータ", "url": "https://dka-hero.me/hm361_390/pict_com_385.html"}, {"num": 369, "title": "正直/見回り", "url": "https://dka-hero.me/hm361_390/pict_com_386.html"}, {"num": 370, "title": "ビター", "url": "https://dka-hero.me/hm361_390/pict_com_387.html"}, {"num": 371, "title": "５", "url": "https://dka-hero.me/hm361_390/pict_com_388.html"}, {"num": 372, "title": "いつもの/感動", "url": "https://dka-hero.me/hm361_390/pict_com_389.html"}, {"num": 373, "title": "伝言ゲーム", "url": "https://dka-hero.me/hm361_390/pict_com_390.html"}, {"num": 374, "title": "重さ/シータ", "url": "https://dka-hero.me/hm361_390/pict_com_391.html"}, {"num": 375, "title": "まぶた/小さい子", "url": "https://dka-hero.me/hm361_390/pict_com_392.html"}, {"num": 376, "title": "調理実習３", "url": "https://dka-hero.me/hm361_390/pict_com_393.html"}, {"num": 377, "title": "キング/子供向け", "url": "https://dka-hero.me/hm361_390/pict_com_394.html"}, {"num": 378, "title": "河野さん", "url": "https://dka-hero.me/hm361_390/pict_com_395.html"}, {"num": 379, "title": "友達記念/髪斬り", "url": "https://dka-hero.me/hm361_390/pict_com_396.html"}, {"num": 380, "title": "高校生", "url": "https://dka-hero.me/hm361_390/pict_com_397.html"}, {"num": 381, "title": "仮装/50度", "url": "https://dka-hero.me/hm361_390/pict_com_398.html"}, {"num": 382, "title": "ひたひた", "url": "https://dka-hero.me/hm361_390/pict_com_399.html"}, {"num": 383, "title": "横取り/吉川想像", "url": "https://dka-hero.me/hm361_390/pict_com_400.html"}, {"num": 384, "title": "須田/立体映像", "url": "https://dka-hero.me/hm361_390/pict_com_401.html"}, {"num": 385, "title": "幼馴染/アラーム", "url": "https://dka-hero.me/hm361_390/pict_com_402.html"}, {"num": 386, "title": "スキキライ", "url": "https://dka-hero.me/hm361_390/pict_com_403.html"}, {"num": 387, "title": "訪問/クローゼット", "url": "https://dka-hero.me/hm361_390/pict_com_404.html"}, {"num": 388, "title": "こもり", "url": "https://dka-hero.me/hm361_390/pict_com_405.html"}, {"num": 389, "title": "ふたまた/カメレオン", "url": "https://dka-hero.me/hm361_390/pict_com_406.html"}, {"num": 390, "title": "親不知/お悩み", "url": "https://dka-hero.me/hm361_390/pict_com_407.html"}, {"num": 391, "title": "体育", "url": "https://dka-hero.me/hm391_420/pict_com_408.html"}, {"num": 392, "title": "夕飯/痛い男", "url": "https://dka-hero.me/hm391_420/pict_com_409.html"}, {"num": 393, "title": "ネイル", "url": "https://dka-hero.me/hm391_420/pict_com_410.html"}, {"num": 394, "title": "暴露/いいよ", "url": "https://dka-hero.me/hm391_420/pict_com_411.html"}, {"num": 395, "title": "積極性/背", "url": "https://dka-hero.me/hm391_420/pict_com_412.html"}, {"num": 396, "title": "相談室２/似てる", "url": "https://dka-hero.me/hm391_420/pict_com_413.html"}, {"num": 397, "title": "10時/サンタ", "url": "https://dka-hero.me/hm391_420/pict_com_414.html"}, {"num": 398, "title": "薬局/パフェ", "url": "https://dka-hero.me/hm391_420/pict_com_415.html"}, {"num": 399, "title": "レコード屋/ホリコレ", "url": "https://dka-hero.me/hm391_420/pict_com_416.html"}, {"num": 400, "title": "他人について", "url": "https://dka-hero.me/hm391_420/pict_com_417.html"}, {"num": 401, "title": "認識/じれる", "url": "https://dka-hero.me/hm391_420/pict_com_418.html"}, {"num": 402, "title": "女の子アピール/秀", "url": "https://dka-hero.me/hm391_420/pict_com_419.html"}, {"num": 403, "title": "さんすう/動物", "url": "https://dka-hero.me/hm391_420/pict_com_420.html"}, {"num": 404, "title": "ポケット/キレイ", "url": "https://dka-hero.me/hm391_420/pict_com_421.html"}, {"num": 405, "title": "明るい人", "url": "https://dka-hero.me/hm391_420/pict_com_422.html"}, {"num": 406, "title": "シャトル/眼帯", "url": "https://dka-hero.me/hm391_420/pict_com_423.html"}, {"num": 407, "title": "割引/包帯", "url": "https://dka-hero.me/hm391_420/pict_com_424.html"}, {"num": 408, "title": "日の当たる方へ", "url": "https://dka-hero.me/hm391_420/pict_com_425.html"}, {"num": 409, "title": "内緒/立ち読み", "url": "https://dka-hero.me/hm391_420/pict_com_426.html"}, {"num": 410, "title": "起きない/常識", "url": "https://dka-hero.me/hm391_420/pict_com_427.html"}, {"num": 411, "title": "キーコ", "url": "https://dka-hero.me/hm391_420/pict_com_428.html"}, {"num": 412, "title": "2000/イメージ", "url": "https://dka-hero.me/hm391_420/pict_com_429.html"}, {"num": 413, "title": "22時の部屋/変", "url": "https://dka-hero.me/hm391_420/pict_com_430.html"}, {"num": 414, "title": "罪な女/鳩尾", "url": "https://dka-hero.me/hm391_420/pict_com_431.html"}, {"num": 415, "title": "面接/ドラマ", "url": "https://dka-hero.me/hm391_420/pict_com_432.html"}, {"num": 416, "title": "ねじる/チャンス", "url": "https://dka-hero.me/hm391_420/pict_com_433.html"}, {"num": 417, "title": "許されること/ベスト", "url": "https://dka-hero.me/hm391_420/pict_com_434.html"}, {"num": 418, "title": "香水/痛い男２", "url": "https://dka-hero.me/hm391_420/pict_com_435.html"}, {"num": 419, "title": "解決できない問題/経過", "url": "https://dka-hero.me/hm391_420/pict_com_436.html"}, {"num": 420, "title": "アキヒコ", "url": "https://dka-hero.me/hm391_420/pict_com_437.html"}, {"num": 421, "title": "爪/ファミレス", "url": "https://dka-hero.me/hm421_450/pict_com_438.html"}, {"num": 422, "title": "さわんないで/コンビニ", "url": "https://dka-hero.me/hm421_450/pict_com_439.html"}, {"num": 423, "title": "食欲/ラブレター", "url": "https://dka-hero.me/hm421_450/pict_com_440.html"}, {"num": 424, "title": "コロコロ/メモリ", "url": "https://dka-hero.me/hm421_450/pict_com_441.html"}, {"num": 425, "title": "キュート/捻挫", "url": "https://dka-hero.me/hm421_450/pict_com_442.html"}, {"num": 426, "title": "桐に忍ぶ", "url": "https://dka-hero.me/hm421_450/pict_com_443.html"}, {"num": 427, "title": "踏んだり蹴ったり叩いたり", "url": "https://dka-hero.me/hm421_450/pict_com_444.html"}, {"num": 428, "title": "ピクルス/遺伝", "url": "https://dka-hero.me/hm421_450/pict_com_445.html"}, {"num": 429, "title": "ひざうえ", "url": "https://dka-hero.me/hm421_450/pict_com_446.html"}, {"num": 430, "title": "もぎたて/めざめ", "url": "https://dka-hero.me/hm421_450/pict_com_447.html"}, {"num": 431, "title": "傘々", "url": "https://dka-hero.me/hm421_450/pict_com_448.html"}, {"num": 432, "title": "センパイ/安定感", "url": "https://dka-hero.me/hm421_450/pict_com_449.html"}, {"num": 433, "title": "その元素記号", "url": "https://dka-hero.me/hm421_450/pict_com_450.html"}, {"num": 434, "title": "いちばん/クッキー", "url": "https://dka-hero.me/hm421_450/pict_com_451.html"}, {"num": 435, "title": "散らかる/風向物件", "url": "https://dka-hero.me/hm421_450/pict_com_452.html"}, {"num": 436, "title": "ホコリ/姫", "url": "https://dka-hero.me/hm421_450/pict_com_453.html"}, {"num": 437, "title": "条件/ベンチ", "url": "https://dka-hero.me/hm421_450/pict_com_454.html"}, {"num": 438, "title": "てのひら", "url": "https://dka-hero.me/hm421_450/pict_com_455.html"}, {"num": 439, "title": "アイドル/インコ", "url": "https://dka-hero.me/hm421_450/pict_com_456.html"}, {"num": 440, "title": "もし君が言うところの、運命なんてものがなかったら２", "url": "https://dka-hero.me/hm421_450/pict_com_457.html"}, {"num": 441, "title": "スカート/よしよし", "url": "https://dka-hero.me/hm421_450/pict_com_458.html"}, {"num": 442, "title": "あかずの間", "url": "https://dka-hero.me/hm421_450/pict_com_459.html"}, {"num": 443, "title": "首、手首/あそび", "url": "https://dka-hero.me/hm421_450/pict_com_460.html"}, {"num": 444, "title": "パチパチ/男子", "url": "https://dka-hero.me/hm421_450/pict_com_461.html"}, {"num": 445, "title": "すすす", "url": "https://dka-hero.me/hm421_450/pict_com_462.html"}, {"num": 446, "title": "体育教員室/朝食", "url": "https://dka-hero.me/hm421_450/pict_com_463.html"}, {"num": 447, "title": "凍結/アケミ", "url": "https://dka-hero.me/hm421_450/pict_com_464.html"}, {"num": 448, "title": "がんばり/２％", "url": "https://dka-hero.me/hm421_450/pict_com_465.html"}, {"num": 449, "title": "170", "url": "https://dka-hero.me/hm421_450/pict_com_466.html"}, {"num": 450, "title": "調理実習４/香", "url": "https://dka-hero.me/hm421_450/pict_com_467.html"}, {"num": 451, "title": "押入れ/少年と女子高生", "url": "https://dka-hero.me/hm451_480/pict_com_468.html"}, {"num": 452, "title": "ガイド/2と3と", "url": "https://dka-hero.me/hm451_480/pict_com_469.html"}, {"num": 453, "title": "冷気/無邪気", "url": "https://dka-hero.me/hm451_480/pict_com_470.html"}, {"num": 454, "title": "火曜日", "url": "https://dka-hero.me/hm451_480/pict_com_471.html"}, {"num": 455, "title": "つめあわせ８", "url": "https://dka-hero.me/hm451_480/pict_com_472.html"}, {"num": 456, "title": "校歌/単語帳", "url": "https://dka-hero.me/hm451_480/pict_com_473.html"}, {"num": 457, "title": "のぼるくん", "url": "https://dka-hero.me/hm451_480/pict_com_474.html"}, {"num": 458, "title": "デリカシー/夕飯前", "url": "https://dka-hero.me/hm451_480/pict_com_475.html"}, {"num": 459, "title": "読解/わかれがみ", "url": "https://dka-hero.me/hm451_480/pict_com_476.html"}, {"num": 460, "title": "赤と青", "url": "https://dka-hero.me/hm451_480/pict_com_477.html"}, {"num": 461, "title": "幻/足", "url": "https://dka-hero.me/hm451_480/pict_com_478.html"}, {"num": 462, "title": "曇、時々、", "url": "https://dka-hero.me/hm451_480/pict_com_479.html"}, {"num": 463, "title": "よくばり/娘", "url": "https://dka-hero.me/hm451_480/pict_com_480.html"}, {"num": 464, "title": "スマイル", "url": "https://dka-hero.me/hm451_480/pict_com_481.html"}, {"num": 465, "title": "この先の朝を一緒に", "url": "https://dka-hero.me/hm451_480/pict_com_482.html"}, {"num": 466, "title": "びりびり/くっきり", "url": "https://dka-hero.me/hm451_480/pict_com_483.html"}, {"num": 467, "title": "姉/エアカノ", "url": "https://dka-hero.me/hm451_480/pict_com_484.html"}, {"num": 468, "title": "S先生/いろどり", "url": "https://dka-hero.me/hm451_480/pict_com_485.html"}, {"num": 469, "title": "アロエ/賢い子", "url": "https://dka-hero.me/hm451_480/pict_com_486.html"}, {"num": 470, "title": "男の人/イタ電", "url": "https://dka-hero.me/hm451_480/pict_com_487.html"}, {"num": 471, "title": "むすび/したしみ", "url": "https://dka-hero.me/hm451_480/pict_com_488.html"}, {"num": 472, "title": "赤い惨劇/成長期", "url": "https://dka-hero.me/hm451_480/pict_com_489.html"}, {"num": 473, "title": "ガールフレンド/上質な物", "url": "https://dka-hero.me/hm451_480/pict_com_490.html"}, {"num": 474, "title": "ほうび", "url": "https://dka-hero.me/hm451_480/pict_com_491.html"}, {"num": 475, "title": "特集/差", "url": "https://dka-hero.me/hm451_480/pict_com_492.html"}, {"num": 476, "title": "引取取引/答えは闇の中", "url": "https://dka-hero.me/hm451_480/pict_com_493.html"}, {"num": 477, "title": "ビデオ", "url": "https://dka-hero.me/hm451_480/pict_com_494.html"}, {"num": 478, "title": "お兄ちゃん/相性", "url": "https://dka-hero.me/hm451_480/pict_com_495.html"}, {"num": 479, "title": "ピンポン", "url": "https://dka-hero.me/hm451_480/pict_com_496.html"}, {"num": 480, "title": "欲/口笛", "url": "https://dka-hero.me/hm451_480/pict_com_497.html"}, {"num": 481, "title": "自由研究/めばえ", "url": "https://dka-hero.me/hm481_500/pict_com_498.html"}, {"num": 482, "title": "つめあわせ９", "url": "https://dka-hero.me/hm481_500/pict_com_499.html"}, {"num": 483, "title": "ビデオ２", "url": "https://dka-hero.me/hm481_500/pict_com_500.html"}, {"num": 484, "title": "花歌/大事な話", "url": "https://dka-hero.me/hm481_500/pict_com_501.html"}, {"num": 485, "title": "グレイ", "url": "https://dka-hero.me/hm481_500/pict_com_502.html"}, {"num": 486, "title": "いまむかし/マキオくん", "url": "https://dka-hero.me/hm481_500/pict_com_503.html"}, {"num": 487, "title": "アドリブ/氷", "url": "https://dka-hero.me/hm481_500/pict_com_504.html"}, {"num": 488, "title": "八に忍ぶ", "url": "https://dka-hero.me/hm481_500/pict_com_505.html"}, {"num": 489, "title": "カチューシャ", "url": "https://dka-hero.me/hm481_500/pict_com_506.html"}, {"num": 490, "title": "3時の部屋/再生", "url": "https://dka-hero.me/hm481_500/pict_com_507.html"}, {"num": 491, "title": "換気中", "url": "https://dka-hero.me/hm481_500/pict_com_508.html"}, {"num": 492, "title": "お姉ちゃん", "url": "https://dka-hero.me/hm481_500/pict_com_509.html"}, {"num": 493, "title": "パスタ/アレコレ", "url": "https://dka-hero.me/hm481_500/pict_com_510.html"}, {"num": 494, "title": "調理実習5", "url": "https://dka-hero.me/hm481_500/pict_com_511.html"}, {"num": 495, "title": "響/雷鳴", "url": "https://dka-hero.me/hm481_500/pict_com_512.html"}, {"num": 496, "title": "ワイドショー/通り雨", "url": "https://dka-hero.me/hm481_500/pict_com_513.html"}, {"num": 497, "title": "ふたつ/充電", "url": "https://dka-hero.me/hm481_500/pict_com_514.html"}, {"num": 498, "title": "うさぎ狩り", "url": "https://dka-hero.me/hm481_500/pict_com_515.html"}, {"num": 499, "title": "ナナコ", "url": "https://dka-hero.me/hm481_500/pict_com_516.html"}, {"num": 500, "title": "堀さんと宮村くんと", "url": "https://dka-hero.me/hm481_500/pict_com_517.html"}, {"num": 501, "title": "おはよう/夜御飯", "url": "https://dka-hero.me/hm501_530/pict_com_518.html"}, {"num": 502, "title": "チャンネル/初夏桜", "url": "https://dka-hero.me/hm501_530/pict_com_519.html"}, {"num": 503, "title": "湯", "url": "https://dka-hero.me/hm501_530/pict_com_520.html"}, {"num": 504, "title": "顔", "url": "https://dka-hero.me/hm501_530/pict_com_521.html"}, {"num": 505, "title": "顔2", "url": "https://dka-hero.me/hm501_530/pict_com_522.html"}, {"num": 506, "title": "楽園/イライラ", "url": "https://dka-hero.me/hm501_530/pict_com_523.html"}, {"num": 507, "title": "宮谷進", "url": "https://dka-hero.me/hm501_530/pict_com_524.html"}, {"num": 508, "title": "お弁当の日", "url": "https://dka-hero.me/hm501_530/pict_com_525.html"}, {"num": 509, "title": "マグネット/タイプ", "url": "https://dka-hero.me/hm501_530/pict_com_526.html"}, {"num": 510, "title": "堀さんと河野さん/給湯室", "url": "https://dka-hero.me/hm501_530/pict_com_527.html"}, {"num": 511, "title": "掲示板", "url": "https://dka-hero.me/hm501_530/pict_com_528.html"}, {"num": 512, "title": "なぞ/バス停", "url": "https://dka-hero.me/hm501_530/pict_com_529.html"}, {"num": 513, "title": "樫に忍ぶ", "url": "https://dka-hero.me/hm501_530/pict_com_530.html"}, {"num": 514, "title": "いちご", "url": "https://dka-hero.me/hm501_530/pict_com_531.html"}, {"num": 515, "title": "クラッカー", "url": "https://dka-hero.me/hm501_530/pict_com_532.html"}, {"num": 516, "title": "カード/214", "url": "https://dka-hero.me/hm501_530/pict_com_533.html"}, {"num": 517, "title": "おふとん/静電気", "url": "https://dka-hero.me/hm501_530/pict_com_534.html"}, {"num": 518, "title": "おしずかに/カイロ", "url": "https://dka-hero.me/hm501_530/pict_com_535.html"}, {"num": 519, "title": "ゴースト/後輩", "url": "https://dka-hero.me/hm501_530/pict_com_536.html"}, {"num": 520, "title": "誘う女", "url": "https://dka-hero.me/hm501_530/pict_com_537.html"}, {"num": 521, "title": "玩具/玩具2", "url": "https://dka-hero.me/hm501_530/pict_com_538.html"}, {"num": 522, "title": "進化", "url": "https://dka-hero.me/hm501_530/pict_com_539.html"}, {"num": 523, "title": "朝/シュシュ", "url": "https://dka-hero.me/hm501_530/pict_com_540.html"}, {"num": 524, "title": "彼シャツ/PG", "url": "https://dka-hero.me/hm501_530/pict_com_541.html"}, {"num": 525, "title": "スーパー/はし", "url": "https://dka-hero.me/hm501_530/pict_com_542.html"}, {"num": 526, "title": "シリアル/攻防", "url": "https://dka-hero.me/hm501_530/pict_com_543.html"}, {"num": 527, "title": "調理実習６", "url": "https://dka-hero.me/hm501_530/pict_com_544.html"}, {"num": 528, "title": "お見合い", "url": "https://dka-hero.me/hm501_530/pict_com_545.html"}, {"num": 529, "title": "からだ", "url": "https://dka-hero.me/hm501_530/pict_com_546.html"}, {"num": 530, "title": "湯2", "url": "https://dka-hero.me/hm501_530/pict_com_547.html"}, {"num": 531, "title": "平和と英雄", "url": "https://dka-hero.me/hm531_560/pict_com_548.html"}, {"num": 532, "title": "空/うろうろ", "url": "https://dka-hero.me/hm531_560/pict_com_549.html"}, {"num": 533, "title": "うわのそら", "url": "https://dka-hero.me/hm531_560/pict_com_550.html"}, {"num": 534, "title": "探偵さん/ほりにゃん", "url": "https://dka-hero.me/hm531_560/pict_com_551.html"}, {"num": 535, "title": "その痛みに", "url": "https://dka-hero.me/hm531_560/pict_com_552.html"}, {"num": 536, "title": "食べ頃", "url": "https://dka-hero.me/hm531_560/pict_com_553.html"}, {"num": 537, "title": "目薬/マキ", "url": "https://dka-hero.me/hm531_560/pict_com_554.html"}, {"num": 538, "title": "おとな", "url": "https://dka-hero.me/hm531_560/pict_com_555.html"}, {"num": 539, "title": "別れ際/スイカ", "url": "https://dka-hero.me/hm531_560/pict_com_556.html"}, {"num": 540, "title": "肉じゃが", "url": "https://dka-hero.me/hm531_560/pict_com_557.html"}, {"num": 541, "title": "チェンジ/ゆびこちゃん", "url": "https://dka-hero.me/hm531_560/pict_com_558.html"}, {"num": 542, "title": "MAP", "url": "https://dka-hero.me/hm531_560/pict_com_559.html"}, {"num": 543, "title": "ゾンビ/ストラップ", "url": "https://dka-hero.me/hm531_560/pict_com_560.html"}, {"num": 544, "title": "サイレン", "url": "https://dka-hero.me/hm531_560/pict_com_561.html"}, {"num": 545, "title": "枯れる魚/ヘアゴム", "url": "https://dka-hero.me/hm531_560/pict_com_562.html"}, {"num": 546, "title": "ジンクス/占い", "url": "https://dka-hero.me/hm531_560/pict_com_563.html"}, {"num": 547, "title": "薬指", "url": "https://dka-hero.me/hm531_560/pict_com_564.html"}, {"num": 548, "title": "調理実習７", "url": "https://dka-hero.me/hm531_560/pict_com_565.html"}, {"num": 549, "title": "彼女の中心", "url": "https://dka-hero.me/hm531_560/pict_com_566.html"}, {"num": 550, "title": "家/留守電", "url": "https://dka-hero.me/hm531_560/pict_com_567.html"}, {"num": 551, "title": "のぼるくん2", "url": "https://dka-hero.me/hm531_560/pict_com_568.html"}, {"num": 552, "title": "巨", "url": "https://dka-hero.me/hm531_560/pict_com_569.html"}, {"num": 553, "title": "キャプテン/ビンゴ", "url": "https://dka-hero.me/hm531_560/pict_com_570.html"}, {"num": 554, "title": "雪景色", "url": "https://dka-hero.me/hm531_560/pict_com_571.html"}, {"num": 555, "title": "4/工事中", "url": "https://dka-hero.me/hm531_560/pict_com_572.html"}, {"num": 556, "title": "パワー/ナイフ", "url": "https://dka-hero.me/hm531_560/pict_com_573.html"}, {"num": 557, "title": "名前/メッセージ", "url": "https://dka-hero.me/hm531_560/pict_com_574.html"}, {"num": 558, "title": "あかずの間２", "url": "https://dka-hero.me/hm531_560/pict_com_575.html"}, {"num": 559, "title": "圧/柔軟", "url": "https://dka-hero.me/hm531_560/pict_com_576.html"}, {"num": 560, "title": "泣かない/ガム", "url": "https://dka-hero.me/hm531_560/pict_com_577.html"}, {"num": 561, "title": "つめあわせ１０", "url": "https://dka-hero.me/hm561_590/pict_com_578.html"}, {"num": 562, "title": "ぐなぐな", "url": "https://dka-hero.me/hm561_590/pict_com_579.html"}, {"num": 563, "title": "こども", "url": "https://dka-hero.me/hm561_590/pict_com_580.html"}, {"num": 564, "title": "ヨウジ", "url": "https://dka-hero.me/hm561_590/pict_com_581.html"}, {"num": 565, "title": "未来/仮想", "url": "https://dka-hero.me/hm561_590/pict_com_582.html"}, {"num": 566, "title": "敗訴/サムライ", "url": "https://dka-hero.me/hm561_590/pict_com_583.html"}, {"num": 567, "title": "キャッチ", "url": "https://dka-hero.me/hm561_590/pict_com_584.html"}, {"num": 568, "title": "兄/ルーム", "url": "https://dka-hero.me/hm561_590/pict_com_585.html"}, {"num": 569, "title": "しゃぼん玉", "url": "https://dka-hero.me/hm561_590/pict_com_586.html"}, {"num": 570, "title": "春の日", "url": "https://dka-hero.me/hm561_590/pict_com_587.html"}, {"num": 571, "title": "和/毒", "url": "https://dka-hero.me/hm561_590/pict_com_588.html"}, {"num": 572, "title": "夏夢", "url": "https://dka-hero.me/hm561_590/pict_com_589.html"}, {"num": 573, "title": "端と端", "url": "https://dka-hero.me/hm561_590/pict_com_590.html"}, {"num": 574, "title": "たな/思い出カード", "url": "https://dka-hero.me/hm561_590/pict_com_591.html"}, {"num": 575, "title": "ささくれ", "url": "https://dka-hero.me/hm561_590/pict_com_592.html"}, {"num": 576, "title": "きもち", "url": "https://dka-hero.me/hm561_590/pict_com_593.html"}, {"num": 577, "title": "からあげ", "url": "https://dka-hero.me/hm561_590/pict_com_594.html"}, {"num": 578, "title": "平和と救世主", "url": "https://dka-hero.me/hm561_590/pict_com_595.html"}, {"num": 579, "title": "やすらぎ/天道虫", "url": "https://dka-hero.me/hm561_590/pict_com_596.html"}, {"num": 580, "title": "まどろみ/のぞみ", "url": "https://dka-hero.me/hm561_590/pict_com_597.html"}, {"num": 581, "title": "広がる世界", "url": "https://dka-hero.me/hm561_590/pict_com_598.html"}, {"num": 582, "title": "雑念", "url": "https://dka-hero.me/hm561_590/pict_com_599.html"}, {"num": 583, "title": "はちみつ", "url": "https://dka-hero.me/hm561_590/pict_com_600.html"}, {"num": 584, "title": "ムービー/油断", "url": "https://dka-hero.me/hm561_590/pict_com_601.html"}, {"num": 585, "title": "親友/浮遊", "url": "https://dka-hero.me/hm561_590/pict_com_602.html"}, {"num": 586, "title": "敬い下手/忍術", "url": "https://dka-hero.me/hm561_590/pict_com_603.html"}, {"num": 587, "title": "ぬくもり/谷原くんって", "url": "https://dka-hero.me/hm561_590/pict_com_604.html"}, {"num": 588, "title": "吉川と柳/怪異", "url": "https://dka-hero.me/hm561_590/pict_com_605.html"}, {"num": 589, "title": "調理実習８", "url": "https://dka-hero.me/hm561_590/pict_com_606.html"}, {"num": 590, "title": "おすし/筆ペン", "url": "https://dka-hero.me/hm561_590/pict_com_607.html"}, {"num": 591, "title": "思い出/巨大化", "url": "https://dka-hero.me/hm591_610/pict_com_608.html"}, {"num": 592, "title": "赤と緑/まちがい探し", "url": "https://dka-hero.me/hm591_610/pict_com_609.html"}, {"num": 593, "title": "ねちがえ", "url": "https://dka-hero.me/hm591_610/pict_com_610.html"}, {"num": 594, "title": "予知能力", "url": "https://dka-hero.me/hm591_610/pict_com_611.html"}, {"num": 595, "title": "窓/算数の先生", "url": "https://dka-hero.me/hm591_610/pict_com_612.html"}, {"num": 596, "title": "ホラーゲーム", "url": "https://dka-hero.me/hm591_610/pict_com_613.html"}, {"num": 597, "title": "ともだち", "url": "https://dka-hero.me/hm591_610/pict_com_614.html"}, {"num": 598, "title": "距離感/Stand Up", "url": "https://dka-hero.me/hm591_610/pict_com_615.html"}, {"num": 599, "title": "アシメくん/2人", "url": "https://dka-hero.me/hm591_610/pict_com_616.html"}, {"num": 600, "title": "つめあわせ11", "url": "https://dka-hero.me/hm591_610/pict_com_617.html"}, {"num": 601, "title": "シェア/消灯", "url": "https://dka-hero.me/hm591_610/pict_com_618.html"}, {"num": 602, "title": "てづくり", "url": "https://dka-hero.me/hm591_610/pict_com_619.html"}, {"num": 603, "title": "2時の部屋/赤", "url": "https://dka-hero.me/hm591_610/pict_com_620.html"}, {"num": 604, "title": "特別賞/早朝", "url": "https://dka-hero.me/hm591_610/pict_com_621.html"}, {"num": 605, "title": "かけ声/だれか", "url": "https://dka-hero.me/hm591_610/pict_com_622.html"}, {"num": 606, "title": "予約/探し物", "url": "https://dka-hero.me/hm591_610/pict_com_623.html"}, {"num": 607, "title": "あのね", "url": "https://dka-hero.me/hm591_610/pict_com_624.html"}, {"num": 608, "title": "検査前日/骨", "url": "https://dka-hero.me/hm591_610/pict_com_625.html"}, {"num": 609, "title": "おやすみなさい/平和と3人", "url": "https://dka-hero.me/hm591_610/pict_com_626.html"}, {"num": 610, "title": "罪の意識/7本", "url": "https://dka-hero.me/hm591_610/pict_com_627.html"}, {"num": 611, "title": "シュークリーム", "url": "https://dka-hero.me/hm611_640/pict_com_628.html"}, {"num": 612, "title": "失くし物/ワード", "url": "https://dka-hero.me/hm611_640/pict_com_629.html"}, {"num": 613, "title": "答え合わせ/そよかぜ", "url": "https://dka-hero.me/hm611_640/pict_com_630.html"}];
+
+let DATA = FALLBACK_DATA;
+
+const mainEl = document.getElementById('main');
+const countEl = document.getElementById('count');
+const searchEl = document.getElementById('search');
+const sortAscBtn = document.getElementById('sortAsc');
+const sortDescBtn = document.getElementById('sortDesc');
+
+// --- Read-state tracking (persisted in localStorage) ---
+const READ_STORAGE_KEY = 'hm_index_read_nums';
+
+function loadReadSet(){
+  try {
+    const raw = localStorage.getItem(READ_STORAGE_KEY);
+    const arr = raw ? JSON.parse(raw) : [];
+    return new Set(Array.isArray(arr) ? arr : []);
+  } catch (e) {
+    return new Set();
+  }
+}
+
+function saveReadSet(set){
+  try {
+    localStorage.setItem(READ_STORAGE_KEY, JSON.stringify(Array.from(set)));
+  } catch (e) {
+    // localStorageが使えない環境(プライベートモード等)では黙って諦める
+  }
+}
+
+let readSet = loadReadSet();
+
+function markRead(num){
+  if (readSet.has(num)) return;
+  readSet.add(num);
+  saveReadSet(readSet);
+}
+
+// クリックされた話数をその場で既読表示にする(全体再描画は不要)
+mainEl.addEventListener('click', (e) => {
+  const link = e.target.closest('a.row');
+  if (!link) return;
+  const num = parseInt(link.dataset.num, 10);
+  if (!Number.isNaN(num)) {
+    markRead(num);
+    link.classList.add('is-read');
+  }
+});
+
+// --- Sort state ---
+let sortOrder = 'asc'; // 'asc' = 古い順(番号が若い順), 'desc' = 新しい順
+
+function setSortOrder(order){
+  sortOrder = order;
+  sortAscBtn.classList.toggle('active', order === 'asc');
+  sortDescBtn.classList.toggle('active', order === 'desc');
+  render(searchEl.value);
+}
+
+sortAscBtn.addEventListener('click', () => setSortOrder('asc'));
+sortDescBtn.addEventListener('click', () => setSortOrder('desc'));
+setSortOrder('asc');
+
+function groupData(items){
+  // itemsは常に「番号の昇順」で渡ってくる前提で20話ごとの区切りを作る
+  const groups = [];
+  let current = null;
+  items.forEach(it=>{
+    const groupStart = Math.floor((it.num-1)/20)*20 + 1;
+    if(!current || current.start !== groupStart){
+      current = { start: groupStart, items: [] };
+      groups.push(current);
+    }
+    current.items.push(it);
+  });
+  return groups;
+}
+
+function render(filterText){
+  const q = (filterText||'').trim().toLowerCase();
+  const filtered = q
+    ? DATA.filter(it => String(it.num).includes(q) || it.title.toLowerCase().includes(q))
+    : DATA;
+
+  countEl.textContent = q ? (filtered.length + ' 件') : (DATA.length + ' 話');
+
+  if(filtered.length === 0){
+    mainEl.innerHTML = '<div class="empty">「' + escapeHtml(filterText) + '」に一致する話は見つかりませんでした。</div>';
+    return;
+  }
+
+  // filtered は常に num 昇順。グループ分けは昇順ベースで作り、
+  // 新しい順のときは「グループの並び」と「グループ内の並び」を両方逆にする。
+  let html = '';
+  if (q) {
+    const ordered = sortOrder === 'desc' ? [...filtered].reverse() : filtered;
+    html += '<div class="group"><ul class="list">' + ordered.map(renderRow).join('') + '</ul></div>';
+  } else {
+    let groups = groupData(filtered);
+    if (sortOrder === 'desc') {
+      groups = [...groups].reverse().map(g => ({ start: g.start, items: [...g.items].reverse() }));
+    }
+    groups.forEach(g=>{
+      const nums = g.items.map(it => it.num);
+      const rangeStart = Math.min(...nums);
+      const rangeEnd = Math.max(...nums);
+      html += '<div class="group"><div class="group-head"><span class="num">' + String(rangeStart).padStart(3,'0') + '–' + String(rangeEnd).padStart(3,'0') + '</span><span class="range">全' + g.items.length + '話</span></div><ul class="list">';
+      html += g.items.map(renderRow).join('');
+      html += '</ul></div>';
+    });
+  }
+  mainEl.innerHTML = html;
+}
+
+function renderRow(it){
+  const readClass = readSet.has(it.num) ? ' is-read' : '';
+  return '<li class="entry"><a class="row' + readClass + '" href="' + it.url + '" target="_blank" rel="noopener" data-num="' + it.num + '">' +
+    '<span class="stamp">' + it.num + '</span>' +
+    '<span class="title">' + escapeHtml(it.title) + '</span>' +
+    '<span class="go">開く &#8599;</span>' +
+    '</a></li>';
+}
+
+function escapeHtml(s){
+  return (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+searchEl.addEventListener('input', e => render(e.target.value));
+
+// --- Load the live list from Google Apps Script on page load ---
+// FALLBACK_DATA (embedded above) is shown immediately so the page is never blank.
+// If the API call succeeds, we rebuild DATA from it and re-render silently.
+// If it fails, or looks wrong, we alert and keep showing FALLBACK_DATA.
+const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbxbv1ccuTpqpd4LhfzFRJhJM5G8p2UipUSKTalAK2TDP7S4T-757olhwD0ni5o1--JQ/exec';
+
+(async function loadLiveData() {
+  try {
+    const res = await fetch(GAS_API_URL, { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTPエラー: ' + res.status);
+    const data = await res.json();
+
+    if (!data || !Array.isArray(data.episodes) || typeof data.count !== 'number') {
+      throw new Error('取得したデータの形式が想定外です。');
+    }
+    if (data.episodes.length === 0) {
+      throw new Error('取得した話数が0件でした。');
+    }
+
+    const episodes = data.episodes
+      .filter(ep => ep && typeof ep.num === 'number' && typeof ep.title === 'string' && typeof ep.url === 'string')
+      .sort((a, b) => a.num - b.num);
+
+    if (episodes.length === 0) {
+      throw new Error('取得したデータを解釈できませんでした。');
+    }
+
+    if (episodes.length < FALLBACK_DATA.length) {
+      window.alert('元ページの件数(' + episodes.length + '件)が想定(' + FALLBACK_DATA.length + '件)より少なく検出されました。ページ構成が変わった可能性があります。表示は変更前のデータのままにしています。');
+      return; // keep showing FALLBACK_DATA
+    }
+
+    // Success: swap in the live data and re-render (preserving any current search text).
+    DATA = episodes;
+
+    // 既読情報(localStorage)を新しい話数リストに合わせて整合させる。
+    // 存在しない番号が既読セットに残っていれば取り除いて保存し直す。
+    const validNums = new Set(episodes.map(ep => ep.num));
+    let readSetChanged = false;
+    readSet.forEach(n => {
+      if (!validNums.has(n)) {
+        readSet.delete(n);
+        readSetChanged = true;
+      }
+    });
+    if (readSetChanged) {
+      saveReadSet(readSet);
+    }
+
+    render(searchEl.value);
+  } catch (err) {
+    window.alert('最新の話数リストの取得に失敗しました: ' + err.message);
+    // FALLBACK_DATA remains in place; no further action needed.
+  }
+})();
+
+</script>
+</body>
+</html>
