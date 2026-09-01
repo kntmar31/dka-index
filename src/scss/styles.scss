@@ -1,0 +1,338 @@
+// =============================================================
+// styles.scss
+// 「堀さんと宮村くん 全話リスト」アプリのスタイル定義。
+// dist/css/styles.css にコンパイルされる。
+// =============================================================
+
+// -------------------------------------------------------------
+// 変数(カラーパレットなど)
+// -------------------------------------------------------------
+$color-paper: #eee9dc;
+$color-paper-line: #c9bfa8;
+$color-ink: #2a2620;
+$color-ink-soft: #6b6455;
+$color-stamp-red: #aa3b2e;
+$color-stamp-red-soft: rgba(170, 59, 46, 0.13); // #AA3B2E22 相当
+$color-ledger-green: #4b6357;
+$color-card-bg: #f7f4ea;
+$color-border: #d8cfb8;
+
+$color-bg: #ffc600; // ページ全体の背景色
+$color-divider: #7a6a3d; // 罫線・区切り線
+$color-stamp-bg: #bc5a46; // 話数バッジの背景
+$color-go-text: #5a4a1f; // 「開く」リンクの通常時テキスト色
+
+$font-serif: 'Shippori Mincho', serif;
+$font-sans: 'Zen Kaku Gothic New', sans-serif;
+
+$breakpoint-mobile: 600px;
+
+// -------------------------------------------------------------
+// リセット・基本レイアウト
+// -------------------------------------------------------------
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  background-color: $color-bg;
+}
+
+body {
+  background-color: $color-bg;
+  color: $color-ink;
+  font-family: $font-sans;
+  min-height: 100vh;
+}
+
+// かつてのノート風デザインの名残(現在は非表示)
+.margin-rule {
+  display: none;
+}
+
+// -------------------------------------------------------------
+// ヘッダー
+// -------------------------------------------------------------
+header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background-color: $color-bg;
+  padding: 28px 20px 14px 20px;
+
+  @media (max-width: $breakpoint-mobile) {
+    padding: 22px 20px 12px 20px;
+  }
+}
+
+.eyebrow {
+  font-size: 12px;
+  letter-spacing: 0.24em;
+  color: $color-stamp-red;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+h1 {
+  font-family: $font-serif;
+  font-weight: 800;
+  font-size: clamp(26px, 4vw, 38px);
+  margin: 0 0 4px 0;
+  line-height: 1.25;
+  letter-spacing: 0.02em;
+}
+
+.sub {
+  color: $color-ink-soft;
+  font-size: 13.5px;
+  margin: 0 0 18px 0;
+}
+
+// -------------------------------------------------------------
+// 検索・ソートの操作行(controls-row)
+// -------------------------------------------------------------
+.controls-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: nowrap;
+}
+
+.search-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: $color-card-bg;
+  border: 1px solid $color-border;
+  border-radius: 3px;
+  padding: 10px 14px;
+  flex: 1 1 auto;
+  min-width: 0;
+
+  svg {
+    flex: none;
+    color: $color-ink-soft;
+  }
+
+  input {
+    border: none;
+    outline: none;
+    background: transparent;
+    font-family: inherit;
+    font-size: 15px;
+    color: $color-ink;
+    width: 100%;
+
+    &::placeholder {
+      color: #9c9484;
+    }
+
+    @media (max-width: $breakpoint-mobile) {
+      font-size: 14px;
+    }
+  }
+}
+
+.count {
+  font-size: 12px;
+  color: $color-ink-soft;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.sort-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+  flex: none;
+}
+
+.sort-label {
+  font-size: 12px;
+  color: $color-ink-soft;
+  white-space: nowrap;
+
+  @media (max-width: $breakpoint-mobile) {
+    display: none;
+  }
+}
+
+.sort-btn {
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 700;
+  background: $color-card-bg;
+  border: 1px solid $color-border;
+  border-radius: 3px;
+  padding: 6px 12px;
+  cursor: pointer;
+  color: $color-ink-soft;
+  white-space: nowrap;
+
+  &:hover {
+    background: $color-stamp-red-soft;
+  }
+
+  &.active {
+    background: $color-stamp-bg;
+    border-color: $color-stamp-bg;
+    color: #fff;
+  }
+
+  @media (max-width: $breakpoint-mobile) {
+    padding: 6px 9px;
+    font-size: 11.5px;
+  }
+}
+
+// -------------------------------------------------------------
+// メインの一覧部分
+// -------------------------------------------------------------
+main {
+  padding: 6px 20px 30px 20px;
+  position: relative;
+  z-index: 1;
+  background-color: $color-bg;
+
+  @media (max-width: $breakpoint-mobile) {
+    padding: 6px 20px 30px 20px;
+  }
+}
+
+.group {
+  margin-top: 26px;
+}
+
+.group-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 0 0 10px 0;
+  padding-bottom: 6px;
+  border-bottom: 1px dashed $color-divider;
+
+  .num {
+    font-family: $font-serif;
+    font-weight: 700;
+    font-size: 15px;
+    color: $color-stamp-red;
+  }
+
+  .range {
+    font-size: 12px;
+    color: $color-ink-soft;
+    letter-spacing: 0.05em;
+  }
+}
+
+ul.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+li.entry {
+  display: block;
+}
+
+// 各話へのリンク行。
+// :hover はタッチデバイスで「スタックしたhover」を起こさないよう、
+// 実際にホバー可能な環境(マウスなど)にのみ適用する。
+a.row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  text-decoration: none;
+  color: $color-ink;
+  padding: 9px 8px 9px 2px;
+  border-bottom: 1px dotted $color-divider;
+  transition: background 0.12s ease, padding-left 0.12s ease;
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      background: $color-stamp-red-soft;
+      padding-left: 8px;
+      outline: none;
+
+      .go {
+        opacity: 1;
+        color: $color-stamp-red;
+      }
+    }
+  }
+
+  &:focus-visible {
+    background: $color-stamp-red-soft;
+    padding-left: 8px;
+    outline: none;
+    box-shadow: inset 2px 0 0 $color-stamp-red;
+  }
+
+  &.is-read {
+    opacity: 0.5;
+  }
+}
+
+.stamp {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: none;
+  background-color: $color-stamp-bg;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: $font-serif;
+  font-weight: 700;
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.title {
+  font-family: $font-serif;
+  font-size: 16.5px;
+  font-weight: 500;
+  flex: 1;
+  letter-spacing: 0.01em;
+}
+
+.go {
+  flex: none;
+  color: $color-go-text;
+  opacity: 0.75;
+  font-size: 13px;
+}
+
+.empty {
+  margin-top: 60px;
+  text-align: center;
+  color: $color-ink-soft;
+  font-family: $font-serif;
+  font-size: 15px;
+}
+
+// -------------------------------------------------------------
+// フッター
+// -------------------------------------------------------------
+footer {
+  padding: 20px 20px 40px 20px;
+  color: $color-stamp-red;
+  font-size: 11.5px;
+  position: relative;
+  z-index: 1;
+  background-color: $color-bg;
+
+  a {
+    color: $color-ledger-green;
+  }
+}
