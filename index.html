@@ -330,7 +330,11 @@ searchEl.addEventListener('input', e => render(e.target.value));
 // FALLBACK_DATA (embedded above) is shown immediately so the page is never blank.
 // If the API call succeeds, we rebuild DATA from it and re-render silently.
 // If it fails, or looks wrong, we alert and keep showing FALLBACK_DATA.
-const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbxbv1ccuTpqpd4LhfzFRJhJM5G8p2UipUSKTalAK2TDP7S4T-757olhwD0ni5o1--JQ/exec';
+//
+// GAS_API_URL is injected at deploy time by .github/workflows/deploy.yml,
+// which replaces the placeholder below with the value of the GAS_API_URL
+// repository secret. It is intentionally NOT committed as a literal URL.
+const GAS_API_URL = '__GAS_API_URL__';
 
 (async function loadLiveData() {
   try {
