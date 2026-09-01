@@ -108,12 +108,20 @@
     border-bottom:1px dotted #7A6A3D;
     transition:background .12s ease, padding-left .12s ease;
   }
-  a.row:hover, a.row:focus-visible{
+  @media (hover: hover) and (pointer: fine){
+    a.row:hover{
+      background:var(--stamp-red-soft);
+      padding-left:8px;
+      outline:none;
+    }
+    a.row:hover .go{ opacity:1; color:var(--stamp-red); }
+  }
+  a.row:focus-visible{
     background:var(--stamp-red-soft);
     padding-left:8px;
     outline:none;
+    box-shadow: inset 2px 0 0 var(--stamp-red);
   }
-  a.row:focus-visible{ box-shadow: inset 2px 0 0 var(--stamp-red); }
   a.row.is-read{ opacity:0.5; }
 
   .stamp{
@@ -137,7 +145,6 @@
   .go{
     flex:none; color:#5A4A1F; opacity:.75; font-size:13px;
   }
-  a.row:hover .go{ opacity:1; color:var(--stamp-red); }
 
   .sort-row{
     display:flex; align-items:center; gap:8px; flex-wrap:nowrap; flex:none;
@@ -235,7 +242,9 @@ function markRead(num){
   saveReadSet(readSet);
 }
 
-// クリックされた話数をその場で既読表示にする(全体再描画は不要)
+// クリックされた話数をその場で既読表示にする(全体再描画は不要)。
+// タッチデバイスでは :hover が残り続ける「スタックしたhover」対策として、
+// 既読化したあとにフォーカスも明示的に外す(blur)。
 mainEl.addEventListener('click', (e) => {
   const link = e.target.closest('a.row');
   if (!link) return;
@@ -244,6 +253,7 @@ mainEl.addEventListener('click', (e) => {
     markRead(num);
     link.classList.add('is-read');
   }
+  link.blur();
 });
 
 // --- Sort state ---
