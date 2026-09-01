@@ -1,38 +1,78 @@
-// Build script: injects the GAS_API_URL secret into index.html at deploy time.
+// build.js
 //
-// Run via: GAS_API_URL=... node build.js
-// Reads index.html (which contains the placeholder __GAS_API_URL__),
-// substitutes the real URL from the environment variable, and writes
-// the result to dist/index.html for GitHub Pages to serve.
+// ビルド手順:
+//   1. TypeScript(src/ts) を dist/js にコンパイル
+//   2. SCSS(src/scss) を dist/css にコンパイル
+//   3. src/index.html を dist/index.html にコピー
+//   4. dist/js/main.js 内のプレースホルダー(__GAS_API_URL__)を
+//      環境変数 GAS_API_URL の値で置換する
 //
-// This keeps the real GAS Web App URL out of the committed source file.
+// 実行: node build.js
+// (事前に `npm install` で devDependencies を入れておくこと)
 
 const fs = require('fs');
 const path = require('path');
+const { execSync } = require('child_process');
 
-const gasUrl = process.env.GAS_API_URL;
+const ROOT = __dirname;
+const DIST_DIR = path.join(ROOT, 'dist');
+const DIST_JS_DIR = path.join(DIST_DIR, 'js');
+const DIST_CSS_DIR = path.join(DIST_DIR, 'css');
 
-if (!gasUrl) {
-  console.error('ERROR: GAS_API_URL environment variable is not set.');
-  console.error('This should be provided via the GAS_API_URL repository secret in CI.');
-  process.exit(1);
+function run(cmd) {
+  console.log('> ' + cmd);
+  execSync(cmd, { stdio: 'inherit', cwd: ROOT });
 }
 
-const srcPath = path.join(__dirname, 'index.html');
-const outDir = path.join(__dirname, 'dist');
-const outPath = path.join(outDir, 'index.html');
-
-let content = fs.readFileSync(srcPath, 'utf8');
-
-const placeholder = '__GAS_API_URL__';
-if (!content.includes(placeholder)) {
-  console.error(`ERROR: placeholder "${placeholder}" not found in index.html.`);
-  process.exit(1);
+function ensureDir(dir) {
+  fs.mkdirSync(dir, { recursive: true });
 }
 
-content = content.split(placeholder).join(gasUrl);
+function main() {
+  ensureDir(DIST_JS_DIR);
+  ensureDir(DIST_CSS_DIR);
 
-fs.mkdirSync(outDir, { recursive: true });
-fs.writeFileSync(outPath, content, 'utf8');
+  // 1. TypeScript -> dist/js
+  run('npx tsc');
 
-console.log(`Built ${outPath} with GAS_API_URL injected.`);
+  // 2. SCSS -> dist/css
+  run('npx sass src/scss/styles.scss:dist/css/styles.css --no-source-map');
+
+  // 3. index.html をそのままコピー(パスは最初から dist 構成基準で書かれている)
+  const srcHtmlPath = path.join(ROOT, 'src', 'index.html');
+  const distHtmlPath = path.join(DIST_DIR, 'index.html');
+  fs.copyFileSync(srcHtmlPath, distHtmlPath);
+  console.log('Copied index.html -> ' + distHtmlPath);
+
+  // 4. GAS_API_URL プレースホルダーの置換
+  const gasUrl = process.env.GAS_API_URL;
+  const mainJsPath = path.join(DIST_JS_DIR, 'main.js');
+
+  if (!fs.existsSync(mainJsPath)) {
+    console.error('ERROR: ' + mainJsPath + ' が見つかりません。tscのビルドに失敗している可能性があります。');
+    process.exit(1);
+  }
+
+  let mainJs = fs.readFileSync(mainJsPath, 'utf8');
+  const placeholder = '__GAS_API_URL__';
+
+  if (!mainJs.includes(placeholder)) {
+    console.error('ERROR: placeholder "' + placeholder + '" が dist/js/main.js 内に見つかりません。');
+    process.exit(1);
+  }
+
+  if (!gasUrl) {
+    console.warn(
+      'WARNING: 環境変数 GAS_API_URL が設定されていないため、プレースホルダーを置換せずビルドを続行します。' +
+        '(ローカルでの見た目確認用途を想定。本番デプロイ時はCI側でGAS_API_URLシークレットを設定してください。)'
+    );
+  } else {
+    mainJs = mainJs.split(placeholder).join(gasUrl);
+    fs.writeFileSync(mainJsPath, mainJs, 'utf8');
+    console.log('Injected GAS_API_URL into ' + mainJsPath);
+  }
+
+  console.log('Build complete: ' + DIST_DIR);
+}
+
+main();
