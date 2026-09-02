@@ -57,7 +57,7 @@ function loadReadSet(): Set<number> {
     const raw = localStorage.getItem(READ_STORAGE_KEY);
     const arr = raw ? (JSON.parse(raw) as unknown) : [];
     return new Set(Array.isArray(arr) ? (arr as number[]) : []);
-  } catch (e) {
+  } catch {
     return new Set();
   }
 }
@@ -71,7 +71,7 @@ function loadReadSet(): Set<number> {
 function saveReadSet(set: Set<number>): void {
   try {
     localStorage.setItem(READ_STORAGE_KEY, JSON.stringify(Array.from(set)));
-  } catch (e) {
+  } catch {
     // localStorageが使えない環境では何もしない
   }
 }
