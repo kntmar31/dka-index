@@ -29,6 +29,9 @@ $breakpoint-mobile: 600px;
 
 // -------------------------------------------------------------
 // リセット・基本レイアウト
+// header / main / footer を縦に並べたフレックスコンテナにし、
+// main を flex: 1 0 auto で伸ばすことで、コンテンツが少ない場合でも
+// footer が画面下端に来る(いわゆる sticky footer)ようにしている。
 // -------------------------------------------------------------
 * {
   box-sizing: border-box;
@@ -49,17 +52,15 @@ body {
   color: $color-ink;
   font-family: $font-sans;
   min-height: 100vh;
-}
-
-// かつてのノート風デザインの名残(現在は非表示)
-.margin-rule {
-  display: none;
+  display: flex;
+  flex-direction: column;
 }
 
 // -------------------------------------------------------------
 // ヘッダー
 // -------------------------------------------------------------
 header {
+  flex: none;
   position: sticky;
   top: 0;
   z-index: 20;
@@ -195,8 +196,14 @@ h1 {
 
 // -------------------------------------------------------------
 // メインの一覧部分
+// flex: 1 0 auto で残りの高さいっぱいに伸び、footer を下端に押しやる。
+// 内部も display: flex; flex-direction: column にしておくことで、
+// 読み込み中/エラーの state-wrap を高さいっぱいに広げて中央寄せできる。
 // -------------------------------------------------------------
 main {
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
   padding: 6px 20px 30px 20px;
   position: relative;
   z-index: 1;
@@ -325,9 +332,83 @@ a.row {
 }
 
 // -------------------------------------------------------------
+// 読み込み中・取得失敗の状態表示(state-wrap / state-card)
+// main の残り高さいっぱいに広げ、その中央にカードを表示する。
+// -------------------------------------------------------------
+.state-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 240px;
+}
+
+.state-card {
+  background: $color-card-bg;
+  border: 1px solid $color-border;
+  border-radius: 10px;
+  padding: 36px 40px;
+  width: 260px;
+  height: 220px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  box-shadow: 0 4px 16px rgba(42, 38, 32, 0.1);
+}
+
+.spinner {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 4px solid $color-border;
+  border-top-color: $color-stamp-red;
+  animation: state-spin 0.8s linear infinite;
+}
+
+@keyframes state-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.state-text {
+  font-family: $font-serif;
+  font-size: 15px;
+  color: $color-ink;
+  margin: 0;
+  text-align: center;
+}
+
+.state-detail {
+  font-size: 12.5px;
+  color: $color-ink-soft;
+  margin: 0;
+  text-align: center;
+}
+
+.retry-btn {
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  background: $color-stamp-bg;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 18px;
+  cursor: pointer;
+
+  &:hover {
+    opacity: 0.85;
+  }
+}
+
+// -------------------------------------------------------------
 // フッター
 // -------------------------------------------------------------
 footer {
+  flex: none;
   padding: 20px 20px 40px 20px;
   color: $color-stamp-red;
   font-size: 11.5px;

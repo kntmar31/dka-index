@@ -2,14 +2,13 @@
  * main.ts
  *
  * 「堀さんと宮村くん 全話リスト」アプリのメインロジック。
- * - フォールバックデータの即時表示
- * - Google Apps Script API からの最新データ取得と差し替え
+ * - Google Apps Script API からのデータ取得(読み込み中/エラー状態の表示を含む)
  * - 既読管理(localStorage)
  * - 検索・並び替え
  * を担う。
  */
 
-import { Episode, FALLBACK_DATA } from './data.js'
+import { Episode } from './data.js'
 
 /**
  * 20話ごとにグループ化した結果の1グループ。
@@ -24,6 +23,9 @@ interface EpisodeGroup {
 /** 話数の並び順。'asc' = 古い順(番号が若い順)、'desc' = 新しい順。 */
 type SortOrder = 'asc' | 'desc'
 
+/** 画面の状態。読み込み中 / 取得失敗 / 表示可能。 */
+type LoadState = 'loading' | 'error' | 'ready'
+
 /** 既読状態を保存する localStorage のキー。 */
 const READ_STORAGE_KEY = 'hm_index_read_nums'
 
@@ -34,11 +36,17 @@ const READ_STORAGE_KEY = 'hm_index_read_nums'
  */
 const GAS_API_URL = '__GAS_API_URL__'
 
-/** アプリが現在表示に使っているデータ(初期値はフォールバック)。 */
-let DATA: Episode[] = FALLBACK_DATA
+/** アプリが現在表示に使っているデータ。取得完了までは空。 */
+let DATA: Episode[] = []
 
 /** 現在の並び順。デフォルトは新しい順。 */
 let sortOrder: SortOrder = 'desc'
+
+/** 画面の状態。起動直後は読み込み中。 */
+let loadState: LoadState = 'loading'
+
+/** 取得に失敗した場合のエラーメッセージ。 */
+let loadErrorMessage = ''
 
 const mainEl = document.getElementById('main') as HTMLElement
 const countEl = document.getElementById('count') as HTMLElement
@@ -196,12 +204,39 @@ function renderRow (it: Episode): string {
 }
 
 /**
+ * 読み込み中の状態を main 内に表示する。画面中央にカードを表示する。
+ */
+function renderLoading (): void {
+  mainEl.innerHTML =
+    '<div class="state-wrap">' +
+    '<div class="state-card">' +
+    '<div class="spinner" aria-hidden="true"></div>' +
+    '<p class="state-text">読み込み中…</p>' +
+    '</div>' +
+    '</div>'
+}
+
+/**
+ * 取得失敗の状態を main 内に表示する。エラー内容と再読み込みボタンを出す。
+ */
+function renderError (): void {
+  mainEl.innerHTML =
+    '<div class="state-wrap">' +
+    '<div class="state-card">' +
+    '<p class="state-text">読み込みに失敗しました</p>' +
+    '<p class="state-detail">' + escapeHtml(loadErrorMessage) + '</p>' +
+    '<button type="button" class="retry-btn" onclick="location.reload()">再読み込み</button>' +
+    '</div>' +
+    '</div>'
+}
+
+/**
  * 検索文字列に応じて一覧を絞り込み、20話ごとのグループ・並び順を適用して描画する。
  * 検索中はグループ分けを行わず、単一のフラットなリストとして表示する。
  *
  * @param filterText 検索ボックスの入力値
  */
-function render (filterText: string): void {
+function renderList (filterText: string): void {
   const q = filterText.trim().toLowerCase()
   const filtered = q.length > 0
     ? DATA.filter((it) => String(it.num).includes(q) || it.title.toLowerCase().includes(q))
@@ -248,10 +283,25 @@ function render (filterText: string): void {
 }
 
 /**
- * Google Apps Script API から最新の話数リストを取得し、成功すれば DATA を差し替えて再描画する。
- * - 取得失敗、または形式が不正な場合はエラーを alert し、フォールバックデータのまま維持する。
- * - 取得件数がフォールバックデータより少ない場合も、ページ構成が変わった可能性を alert して据え置く。
- * - 成功時は既読集合(localStorage)を新しいリストに合わせて整合させる(存在しない番号を削除)。
+ * 現在の loadState に応じて、読み込み中/エラー/一覧のいずれかを描画する。
+ *
+ * @param filterText 検索ボックスの入力値(一覧表示時のみ使用)
+ */
+function render (filterText: string): void {
+  if (loadState === 'loading') {
+    renderLoading()
+    return
+  }
+  if (loadState === 'error') {
+    renderError()
+    return
+  }
+  renderList(filterText)
+}
+
+/**
+ * Google Apps Script API から話数リストを取得する。
+ * 成功すれば DATA にセットして一覧を表示し、失敗すればエラー状態を表示する。
  */
 async function loadLiveData (): Promise<void> {
   try {
@@ -287,19 +337,9 @@ async function loadLiveData (): Promise<void> {
       throw new Error('取得したデータを解釈できませんでした。')
     }
 
-    if (episodes.length < FALLBACK_DATA.length) {
-      window.alert(
-        '元ページの件数(' +
-          String(episodes.length) +
-          '件)が想定(' +
-          String(FALLBACK_DATA.length) +
-          '件)より少なく検出されました。ページ構成が変わった可能性があります。表示は変更前のデータのままにしています。'
-      )
-      return // FALLBACK_DATAを維持
-    }
-
-    // 成功: ライブデータに差し替えて再描画(検索欄の入力は保持)
+    // 成功: データをセットして一覧表示に切り替える
     DATA = episodes
+    loadState = 'ready'
 
     // 既読情報(localStorage)を新しい話数リストに合わせて整合させる。
     // 存在しない番号が既読セットに残っていれば取り除いて保存し直す。
@@ -318,14 +358,15 @@ async function loadLiveData (): Promise<void> {
     render(searchEl.value)
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
-    window.alert('最新の話数リストの取得に失敗しました: ' + message)
-    // FALLBACK_DATAのまま維持
+    loadState = 'error'
+    loadErrorMessage = message
+    render(searchEl.value)
   }
 }
 
 /**
  * アプリの初期化処理。
- * イベントリスナーの登録、初期描画、ライブデータの取得を行う。
+ * イベントリスナーの登録、読み込み中表示、ライブデータの取得を行う。
  */
 function init (): void {
   mainEl.addEventListener('click', handleListClick)
@@ -333,7 +374,10 @@ function init (): void {
   sortAscBtn.addEventListener('click', () => { setSortOrder('asc') })
   sortDescBtn.addEventListener('click', () => { setSortOrder('desc') })
 
-  setSortOrder('desc') // 初期描画を兼ねる(デフォルトは新しい順)
+  sortAscBtn.classList.toggle('active', sortOrder === 'asc')
+  sortDescBtn.classList.toggle('active', sortOrder === 'desc')
+
+  render(searchEl.value) // 読み込み中表示を出す
 
   void loadLiveData()
 }
