@@ -258,7 +258,13 @@ async function loadLiveData (): Promise<void> {
     const res = await fetch(GAS_API_URL, { cache: 'no-store' })
     if (!res.ok) throw new Error('HTTPエラー: ' + String(res.status))
 
-    const data = (await res.json()) as {
+    const rawData: unknown = await res.json()
+
+    if (typeof rawData !== 'object' || rawData === null) {
+      throw new Error('取得したデータの形式が想定外です。')
+    }
+
+    const data = rawData as {
       count?: number
       episodes?: Array<{ num?: unknown, title?: unknown, url?: unknown }>
     }
