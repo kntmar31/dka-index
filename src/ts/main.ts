@@ -55,7 +55,7 @@ const sortDescBtn = document.getElementById('sortDesc') as HTMLButtonElement
 function loadReadSet (): Set<number> {
   try {
     const raw = localStorage.getItem(READ_STORAGE_KEY)
-    const arr = raw ? (JSON.parse(raw) as unknown) : []
+    const arr: unknown = raw != null ? JSON.parse(raw) : []
     return new Set(Array.isArray(arr) ? (arr as number[]) : [])
   } catch {
     return new Set()
@@ -77,7 +77,7 @@ function saveReadSet (set: Set<number>): void {
 }
 
 /** 現在の既読話数の集合(起動時に localStorage から読み込む)。 */
-let readSet: Set<number> = loadReadSet()
+const readSet: Set<number> = loadReadSet()
 
 /**
  * 指定した話数を既読としてマークし、必要であれば localStorage に保存する。
@@ -101,16 +101,18 @@ function markRead (num: number): void {
  */
 function handleListClick (e: MouseEvent): void {
   const target = e.target as HTMLElement
-  const link = target.closest('a.row') as HTMLAnchorElement | null
-  if (!link) return
+  const link = target.closest('a.row')
+  if (link === null) return
 
-  const numAttr = link.dataset.num
-  const num = numAttr ? parseInt(numAttr, 10) : NaN
+  const numAttr = link.getAttribute('data-num')
+  const num = numAttr !== null ? parseInt(numAttr, 10) : NaN
   if (!Number.isNaN(num)) {
     markRead(num)
     link.classList.add('is-read')
   }
-  link.blur()
+  if (link instanceof HTMLElement) {
+    link.blur()
+  }
 }
 
 /**
@@ -138,7 +140,7 @@ function groupData (items: Episode[]): EpisodeGroup[] {
 
   items.forEach((it) => {
     const groupStart = Math.floor((it.num - 1) / 20) * 20 + 1
-    if (!current || current.start !== groupStart) {
+    if (current === null || current.start !== groupStart) {
       current = { start: groupStart, items: [] }
       groups.push(current)
     }
@@ -162,7 +164,8 @@ function escapeHtml (s: string | undefined | null): string {
     '"': '&quot;',
     "'": '&#39;'
   }
-  return (s || '').replace(/[&<>"']/g, (c) => map[c])
+  const str = s ?? ''
+  return str.replace(/[&<>"']/g, (c) => map[c])
 }
 
 /**
@@ -179,10 +182,10 @@ function renderRow (it: Episode): string {
     '" href="' +
     it.url +
     '" target="_blank" rel="noopener" data-num="' +
-    it.num +
+    String(it.num) +
     '">' +
     '<span class="stamp">' +
-    it.num +
+    String(it.num) +
     '</span>' +
     '<span class="title">' +
     escapeHtml(it.title) +
@@ -199,12 +202,12 @@ function renderRow (it: Episode): string {
  * @param filterText 検索ボックスの入力値
  */
 function render (filterText: string): void {
-  const q = (filterText || '').trim().toLowerCase()
-  const filtered = q
+  const q = filterText.trim().toLowerCase()
+  const filtered = q.length > 0
     ? DATA.filter((it) => String(it.num).includes(q) || it.title.toLowerCase().includes(q))
     : DATA
 
-  countEl.textContent = q ? filtered.length + ' 件' : DATA.length + ' 話'
+  countEl.textContent = q.length > 0 ? String(filtered.length) + ' 件' : String(DATA.length) + ' 話'
 
   if (filtered.length === 0) {
     mainEl.innerHTML =
@@ -216,7 +219,7 @@ function render (filterText: string): void {
   // 新しい順のときは「グループの並び」と「グループ内の並び」を両方逆にする。
   let html = ''
 
-  if (q) {
+  if (q.length > 0) {
     const ordered = sortOrder === 'desc' ? [...filtered].reverse() : filtered
     html += '<div class="group"><ul class="list">' + ordered.map(renderRow).join('') + '</ul></div>'
   } else {
@@ -234,7 +237,7 @@ function render (filterText: string): void {
         '–' +
         String(rangeEnd).padStart(3, '0') +
         '</span><span class="range">全' +
-        g.items.length +
+        String(g.items.length) +
         '話</span></div><ul class="list">'
       html += g.items.map(renderRow).join('')
       html += '</ul></div>'
@@ -253,14 +256,20 @@ function render (filterText: string): void {
 async function loadLiveData (): Promise<void> {
   try {
     const res = await fetch(GAS_API_URL, { cache: 'no-store' })
-    if (!res.ok) throw new Error('HTTPエラー: ' + res.status)
+    if (!res.ok) throw new Error('HTTPエラー: ' + String(res.status))
 
-    const data = (await res.json()) as {
-      count?: number
-      episodes?: Array<{ num?: unknown; title?: unknown; url?: unknown }>
+    const rawData: unknown = await res.json()
+
+    if (typeof rawData !== 'object' || rawData === null) {
+      throw new Error('取得したデータの形式が想定外です。')
     }
 
-    if (!data || !Array.isArray(data.episodes) || typeof data.count !== 'number') {
+    const data = rawData as {
+      count?: number
+      episodes?: Array<{ num?: unknown, title?: unknown, url?: unknown }>
+    }
+
+    if (data.episodes === undefined || !Array.isArray(data.episodes) || typeof data.count !== 'number') {
       throw new Error('取得したデータの形式が想定外です。')
     }
     if (data.episodes.length === 0) {
@@ -269,8 +278,8 @@ async function loadLiveData (): Promise<void> {
 
     const episodes: Episode[] = data.episodes
       .filter(
-        (ep): ep is { num: number; title: string; url: string } =>
-          !!ep && typeof ep.num === 'number' && typeof ep.title === 'string' && typeof ep.url === 'string'
+        (ep): ep is { num: number, title: string, url: string } =>
+          typeof ep.num === 'number' && typeof ep.title === 'string' && typeof ep.url === 'string'
       )
       .sort((a, b) => a.num - b.num)
 
@@ -281,9 +290,9 @@ async function loadLiveData (): Promise<void> {
     if (episodes.length < FALLBACK_DATA.length) {
       window.alert(
         '元ページの件数(' +
-          episodes.length +
+          String(episodes.length) +
           '件)が想定(' +
-          FALLBACK_DATA.length +
+          String(FALLBACK_DATA.length) +
           '件)より少なく検出されました。ページ構成が変わった可能性があります。表示は変更前のデータのままにしています。'
       )
       return // FALLBACK_DATAを維持
@@ -320,9 +329,9 @@ async function loadLiveData (): Promise<void> {
  */
 function init (): void {
   mainEl.addEventListener('click', handleListClick)
-  searchEl.addEventListener('input', (e) => render((e.target as HTMLInputElement).value))
-  sortAscBtn.addEventListener('click', () => setSortOrder('asc'))
-  sortDescBtn.addEventListener('click', () => setSortOrder('desc'))
+  searchEl.addEventListener('input', (e) => { render((e.target as HTMLInputElement).value) })
+  sortAscBtn.addEventListener('click', () => { setSortOrder('asc') })
+  sortDescBtn.addEventListener('click', () => { setSortOrder('desc') })
 
   setSortOrder('desc') // 初期描画を兼ねる(デフォルトは新しい順)
 
