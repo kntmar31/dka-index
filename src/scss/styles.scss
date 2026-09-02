@@ -239,8 +239,12 @@ ul.list {
   padding: 0;
 }
 
+// 各話の行。border は li 側に付ける。a.row に付けると
+// a.row.is-read の opacity の影響を受けて薄くなってしまうため、
+// 既読状態にかかわらず罫線は常に一定の濃さで見せたい。
 li.entry {
   display: block;
+  border-bottom: 1px dotted $color-divider;
 }
 
 // 各話へのリンク行。
@@ -253,7 +257,6 @@ a.row {
   text-decoration: none;
   color: $color-ink;
   padding: 9px 8px 9px 2px;
-  border-bottom: 1px dotted $color-divider;
   transition: background 0.12s ease, padding-left 0.12s ease;
 
   @media (hover: hover) and (pointer: fine) {
