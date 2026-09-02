@@ -37,8 +37,8 @@ const GAS_API_URL = '__GAS_API_URL__';
 /** アプリが現在表示に使っているデータ(初期値はフォールバック)。 */
 let DATA: Episode[] = FALLBACK_DATA;
 
-/** 現在の並び順。 */
-let sortOrder: SortOrder = 'asc';
+/** 現在の並び順。デフォルトは新しい順。 */
+let sortOrder: SortOrder = 'desc';
 
 const mainEl = document.getElementById('main') as HTMLElement;
 const countEl = document.getElementById('count') as HTMLElement;
@@ -324,7 +324,7 @@ function init(): void {
   sortAscBtn.addEventListener('click', () => setSortOrder('asc'));
   sortDescBtn.addEventListener('click', () => setSortOrder('desc'));
 
-  setSortOrder('asc'); // 初期描画を兼ねる
+  setSortOrder('desc'); // 初期描画を兼ねる(デフォルトは新しい順)
 
   void loadLiveData();
 }
