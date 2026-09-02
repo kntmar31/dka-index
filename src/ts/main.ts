@@ -1,0 +1,332 @@
+/**
+ * main.ts
+ *
+ * 「堀さんと宮村くん 全話リスト」アプリのメインロジック。
+ * - フォールバックデータの即時表示
+ * - Google Apps Script API からの最新データ取得と差し替え
+ * - 既読管理(localStorage)
+ * - 検索・並び替え
+ * を担う。
+ */
+
+import { Episode, FALLBACK_DATA } from './data.js';
+
+/**
+ * 20話ごとにグループ化した結果の1グループ。
+ */
+interface EpisodeGroup {
+  /** このグループの先頭話数(例: 1, 21, 41 ...) */
+  start: number;
+  /** グループに含まれる話のリスト(渡された順序をそのまま保持する) */
+  items: Episode[];
+}
+
+/** 話数の並び順。'asc' = 古い順(番号が若い順)、'desc' = 新しい順。 */
+type SortOrder = 'asc' | 'desc';
+
+/** 既読状態を保存する localStorage のキー。 */
+const READ_STORAGE_KEY = 'hm_index_read_nums';
+
+/**
+ * GAS_API_URL は deploy 時に build.js によって書き換えられるプレースホルダー。
+ * リポジトリの GAS_API_URL シークレットの値がここに注入される。
+ * コミットされたソースコードには実際のURLを含めない。
+ */
+const GAS_API_URL = '__GAS_API_URL__';
+
+/** アプリが現在表示に使っているデータ(初期値はフォールバック)。 */
+let DATA: Episode[] = FALLBACK_DATA;
+
+/** 現在の並び順。 */
+let sortOrder: SortOrder = 'asc';
+
+const mainEl = document.getElementById('main') as HTMLElement;
+const countEl = document.getElementById('count') as HTMLElement;
+const searchEl = document.getElementById('search') as HTMLInputElement;
+const sortAscBtn = document.getElementById('sortAsc') as HTMLButtonElement;
+const sortDescBtn = document.getElementById('sortDesc') as HTMLButtonElement;
+
+/**
+ * localStorage から既読話数の集合を読み込む。
+ * 値が壊れている・取得できない場合は空集合を返す(例外を投げない)。
+ *
+ * @returns 既読になっている話数の Set
+ */
+function loadReadSet(): Set<number> {
+  try {
+    const raw = localStorage.getItem(READ_STORAGE_KEY);
+    const arr = raw ? (JSON.parse(raw) as unknown) : [];
+    return new Set(Array.isArray(arr) ? (arr as number[]) : []);
+  } catch {
+    return new Set();
+  }
+}
+
+/**
+ * 既読話数の集合を localStorage に保存する。
+ * プライベートブラウジングなどで保存に失敗しても黙って諦める(UIを壊さない)。
+ *
+ * @param set 保存する既読話数の集合
+ */
+function saveReadSet(set: Set<number>): void {
+  try {
+    localStorage.setItem(READ_STORAGE_KEY, JSON.stringify(Array.from(set)));
+  } catch {
+    // localStorageが使えない環境では何もしない
+  }
+}
+
+/** 現在の既読話数の集合(起動時に localStorage から読み込む)。 */
+let readSet: Set<number> = loadReadSet();
+
+/**
+ * 指定した話数を既読としてマークし、必要であれば localStorage に保存する。
+ * 既に既読の場合は何もしない(保存処理を無駄に呼ばない)。
+ *
+ * @param num 既読にする話数
+ */
+function markRead(num: number): void {
+  if (readSet.has(num)) return;
+  readSet.add(num);
+  saveReadSet(readSet);
+}
+
+/**
+ * 話一覧のクリックイベントハンドラ。
+ * クリックされたリンクの話数を既読にし、その場で見た目(is-read)を更新する。
+ * タッチデバイスでは :hover が残り続ける「スタックしたhover」対策として、
+ * 既読化したあとにフォーカスも明示的に外す(blur)。
+ *
+ * @param e クリックイベント
+ */
+function handleListClick(e: MouseEvent): void {
+  const target = e.target as HTMLElement;
+  const link = target.closest('a.row') as HTMLAnchorElement | null;
+  if (!link) return;
+
+  const numAttr = link.dataset.num;
+  const num = numAttr ? parseInt(numAttr, 10) : NaN;
+  if (!Number.isNaN(num)) {
+    markRead(num);
+    link.classList.add('is-read');
+  }
+  link.blur();
+}
+
+/**
+ * 並び順を切り替え、ボタンの見た目(active状態)を更新したうえで再描画する。
+ *
+ * @param order 新しい並び順
+ */
+function setSortOrder(order: SortOrder): void {
+  sortOrder = order;
+  sortAscBtn.classList.toggle('active', order === 'asc');
+  sortDescBtn.classList.toggle('active', order === 'desc');
+  render(searchEl.value);
+}
+
+/**
+ * 番号昇順のリストを20話ごとのグループに分割する。
+ * 呼び出し側は items が常に num の昇順であることを保証する必要がある。
+ *
+ * @param items グループ化対象の話一覧(num昇順)
+ * @returns 20話ごとに区切られたグループの配列
+ */
+function groupData(items: Episode[]): EpisodeGroup[] {
+  const groups: EpisodeGroup[] = [];
+  let current: EpisodeGroup | null = null;
+
+  items.forEach((it) => {
+    const groupStart = Math.floor((it.num - 1) / 20) * 20 + 1;
+    if (!current || current.start !== groupStart) {
+      current = { start: groupStart, items: [] };
+      groups.push(current);
+    }
+    current.items.push(it);
+  });
+
+  return groups;
+}
+
+/**
+ * HTML特殊文字をエスケープする。
+ *
+ * @param s エスケープ対象の文字列(undefined/nullは空文字扱い)
+ * @returns エスケープ後の文字列
+ */
+function escapeHtml(s: string | undefined | null): string {
+  const map: Record<string, string> = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+  };
+  return (s || '').replace(/[&<>"']/g, (c) => map[c]);
+}
+
+/**
+ * 1話分の行(li > a)のHTML文字列を生成する。
+ *
+ * @param it 描画対象の話データ
+ * @returns 生成された <li> 要素のHTML文字列
+ */
+function renderRow(it: Episode): string {
+  const readClass = readSet.has(it.num) ? ' is-read' : '';
+  return (
+    '<li class="entry"><a class="row' +
+    readClass +
+    '" href="' +
+    it.url +
+    '" target="_blank" rel="noopener" data-num="' +
+    it.num +
+    '">' +
+    '<span class="stamp">' +
+    it.num +
+    '</span>' +
+    '<span class="title">' +
+    escapeHtml(it.title) +
+    '</span>' +
+    '<span class="go">開く &#8599;</span>' +
+    '</a></li>'
+  );
+}
+
+/**
+ * 検索文字列に応じて一覧を絞り込み、20話ごとのグループ・並び順を適用して描画する。
+ * 検索中はグループ分けを行わず、単一のフラットなリストとして表示する。
+ *
+ * @param filterText 検索ボックスの入力値
+ */
+function render(filterText: string): void {
+  const q = (filterText || '').trim().toLowerCase();
+  const filtered = q
+    ? DATA.filter((it) => String(it.num).includes(q) || it.title.toLowerCase().includes(q))
+    : DATA;
+
+  countEl.textContent = q ? filtered.length + ' 件' : DATA.length + ' 話';
+
+  if (filtered.length === 0) {
+    mainEl.innerHTML =
+      '<div class="empty">「' + escapeHtml(filterText) + '」に一致する話は見つかりませんでした。</div>';
+    return;
+  }
+
+  // filtered は常に num 昇順。グループ分けは昇順ベースで作り、
+  // 新しい順のときは「グループの並び」と「グループ内の並び」を両方逆にする。
+  let html = '';
+
+  if (q) {
+    const ordered = sortOrder === 'desc' ? [...filtered].reverse() : filtered;
+    html += '<div class="group"><ul class="list">' + ordered.map(renderRow).join('') + '</ul></div>';
+  } else {
+    let groups = groupData(filtered);
+    if (sortOrder === 'desc') {
+      groups = [...groups].reverse().map((g) => ({ start: g.start, items: [...g.items].reverse() }));
+    }
+    groups.forEach((g) => {
+      const nums = g.items.map((it) => it.num);
+      const rangeStart = Math.min(...nums);
+      const rangeEnd = Math.max(...nums);
+      html +=
+        '<div class="group"><div class="group-head"><span class="num">' +
+        String(rangeStart).padStart(3, '0') +
+        '–' +
+        String(rangeEnd).padStart(3, '0') +
+        '</span><span class="range">全' +
+        g.items.length +
+        '話</span></div><ul class="list">';
+      html += g.items.map(renderRow).join('');
+      html += '</ul></div>';
+    });
+  }
+
+  mainEl.innerHTML = html;
+}
+
+/**
+ * Google Apps Script API から最新の話数リストを取得し、成功すれば DATA を差し替えて再描画する。
+ * - 取得失敗、または形式が不正な場合はエラーを alert し、フォールバックデータのまま維持する。
+ * - 取得件数がフォールバックデータより少ない場合も、ページ構成が変わった可能性を alert して据え置く。
+ * - 成功時は既読集合(localStorage)を新しいリストに合わせて整合させる(存在しない番号を削除)。
+ */
+async function loadLiveData(): Promise<void> {
+  try {
+    const res = await fetch(GAS_API_URL, { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTPエラー: ' + res.status);
+
+    const data = (await res.json()) as {
+      count?: number;
+      episodes?: Array<{ num?: unknown; title?: unknown; url?: unknown }>;
+    };
+
+    if (!data || !Array.isArray(data.episodes) || typeof data.count !== 'number') {
+      throw new Error('取得したデータの形式が想定外です。');
+    }
+    if (data.episodes.length === 0) {
+      throw new Error('取得した話数が0件でした。');
+    }
+
+    const episodes: Episode[] = data.episodes
+      .filter(
+        (ep): ep is { num: number; title: string; url: string } =>
+          !!ep && typeof ep.num === 'number' && typeof ep.title === 'string' && typeof ep.url === 'string'
+      )
+      .sort((a, b) => a.num - b.num);
+
+    if (episodes.length === 0) {
+      throw new Error('取得したデータを解釈できませんでした。');
+    }
+
+    if (episodes.length < FALLBACK_DATA.length) {
+      window.alert(
+        '元ページの件数(' +
+          episodes.length +
+          '件)が想定(' +
+          FALLBACK_DATA.length +
+          '件)より少なく検出されました。ページ構成が変わった可能性があります。表示は変更前のデータのままにしています。'
+      );
+      return; // FALLBACK_DATAを維持
+    }
+
+    // 成功: ライブデータに差し替えて再描画(検索欄の入力は保持)
+    DATA = episodes;
+
+    // 既読情報(localStorage)を新しい話数リストに合わせて整合させる。
+    // 存在しない番号が既読セットに残っていれば取り除いて保存し直す。
+    const validNums = new Set(episodes.map((ep) => ep.num));
+    let readSetChanged = false;
+    readSet.forEach((n) => {
+      if (!validNums.has(n)) {
+        readSet.delete(n);
+        readSetChanged = true;
+      }
+    });
+    if (readSetChanged) {
+      saveReadSet(readSet);
+    }
+
+    render(searchEl.value);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    window.alert('最新の話数リストの取得に失敗しました: ' + message);
+    // FALLBACK_DATAのまま維持
+  }
+}
+
+/**
+ * アプリの初期化処理。
+ * イベントリスナーの登録、初期描画、ライブデータの取得を行う。
+ */
+function init(): void {
+  mainEl.addEventListener('click', handleListClick);
+  searchEl.addEventListener('input', (e) => render((e.target as HTMLInputElement).value));
+  sortAscBtn.addEventListener('click', () => setSortOrder('asc'));
+  sortDescBtn.addEventListener('click', () => setSortOrder('desc'));
+
+  setSortOrder('asc'); // 初期描画を兼ねる
+
+  void loadLiveData();
+}
+
+init();

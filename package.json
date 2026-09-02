@@ -1,0 +1,15 @@
+{
+  "name": "dka-index",
+  "private": true,
+  "version": "1.0.0",
+  "description": "堀さんと宮村くん 全話リスト — 目次アプリ",
+  "scripts": {
+    "build:ts": "tsc",
+    "build:scss": "sass src/scss/styles.scss:dist/css/styles.css --no-source-map",
+    "build": "node build.js"
+  },
+  "devDependencies": {
+    "sass": "^1.77.0",
+    "typescript": "^5.5.0"
+  }
+}
