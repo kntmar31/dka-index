@@ -6,26 +6,49 @@
 
 // -------------------------------------------------------------
 // 変数(カラーパレットなど)
+// 背景・文字色・アクセントカラーは、カラーテーマ切り替え機能のために
+// SCSS変数ではなく下記の「テーマ変数」セクションでCSSカスタムプロパティとして定義する。
+// ここに残っているのはテーマに関わらず共通の色のみ。
 // -------------------------------------------------------------
 $color-paper: #eee9dc;
 $color-paper-line: #c9bfa8;
-$color-ink: #2a2620;
 $color-ink-soft: #6b6455;
-$color-stamp-red: #aa3b2e;
-$color-stamp-red-soft: rgba(170, 59, 46, 0.13); // #AA3B2E22 相当
 $color-ledger-green: #4b6357;
 $color-card-bg: #f7f4ea;
 $color-border: #d8cfb8;
 
-$color-bg: #ffc600; // ページ全体の背景色
 $color-divider: #7a6a3d; // 罫線・区切り線
-$color-stamp-bg: #bc5a46; // 話数バッジの背景
 $color-go-text: #5a4a1f; // 「開く」リンクの通常時テキスト色
 
 $font-serif: 'Shippori Mincho', serif;
 $font-sans: 'Zen Kaku Gothic New', sans-serif;
 
 $breakpoint-mobile: 600px;
+
+// -------------------------------------------------------------
+// テーマ変数(カラーテーマ切り替え)
+// 背景・文字色・アクセントカラーをCSSカスタムプロパティにしておき、
+// <html> に data-theme="lime" を付け外しするだけで一括切り替えできるようにする。
+// --color-bg-next は「切り替え先」の背景色で、テーマ切り替えボタン自体の
+// 色に使う(現在の背景に埋もれないよう、次のテーマの色を示す)。
+// -------------------------------------------------------------
+:root {
+  --color-bg: #ffc600;
+  --color-ink: #2a2620;
+  --color-accent: #aa3b2e;
+  --color-accent-bg: #bc5a46;
+  --color-accent-soft: rgba(170, 59, 46, 0.13);
+  --color-bg-next: #cfff00; // 切り替え先(limeテーマ)の背景色
+}
+
+html[data-theme='lime'] {
+  --color-bg: #cfff00;
+  --color-ink: #000000;
+  --color-accent: #df0040;
+  --color-accent-bg: #000000;
+  --color-accent-soft: rgba(223, 0, 64, 0.13);
+  --color-bg-next: #ffc600; // 切り替え先(amberテーマ)の背景色
+}
 
 // -------------------------------------------------------------
 // リセット・基本レイアウト
@@ -44,12 +67,12 @@ body {
 }
 
 html {
-  background-color: $color-bg;
+  background-color: var(--color-bg);
 }
 
 body {
-  background-color: $color-bg;
-  color: $color-ink;
+  background-color: var(--color-bg);
+  color: var(--color-ink);
   font-family: $font-sans;
   min-height: 100vh;
   display: flex;
@@ -64,7 +87,7 @@ header {
   position: sticky;
   top: 0;
   z-index: 20;
-  background-color: $color-bg;
+  background-color: var(--color-bg);
   padding: 28px 20px 14px 20px;
 
   @media (max-width: $breakpoint-mobile) {
@@ -72,13 +95,34 @@ header {
   }
 }
 
+// eyebrow(「目次帳 — Index」)とカラーテーマ切り替えボタンを同じ行に並べる。
+.eyebrow-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
 .eyebrow {
   font-size: 12px;
   letter-spacing: 0.24em;
-  color: $color-stamp-red;
+  color: var(--color-accent);
   font-weight: 700;
   text-transform: uppercase;
-  margin-bottom: 6px;
+  margin-bottom: 0;
+}
+
+// カラーテーマ切り替えボタン。丸ボタン1つでトグルする。
+// 背景色は「切り替え先」のテーマ色(--color-bg-next)にし、
+// 現在の背景に埋もれず「押すとどうなるか」が一目でわかるようにしている。
+.theme-toggle {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  background: var(--color-bg-next);
 }
 
 h1 {
@@ -112,7 +156,7 @@ h1 {
   gap: 10px;
   background: $color-card-bg;
   border: 1px solid $color-border;
-  border-radius: 3px;
+  border-radius: 4px;
   padding: 10px 14px;
   flex: 1 1 auto;
   min-width: 0;
@@ -128,7 +172,7 @@ h1 {
     background: transparent;
     font-family: inherit;
     font-size: 15px;
-    color: $color-ink;
+    color: var(--color-ink);
     width: 100%;
 
     &::placeholder {
@@ -172,19 +216,19 @@ h1 {
   font-weight: 700;
   background: $color-card-bg;
   border: 1px solid $color-border;
-  border-radius: 3px;
+  border-radius: 4px;
   padding: 6px 12px;
   cursor: pointer;
   color: $color-ink-soft;
   white-space: nowrap;
 
   &:hover {
-    background: $color-stamp-red-soft;
+    background: var(--color-accent-soft);
   }
 
   &.active {
-    background: $color-stamp-bg;
-    border-color: $color-stamp-bg;
+    background: var(--color-accent-bg);
+    border-color: var(--color-accent-bg);
     color: #fff;
   }
 
@@ -207,7 +251,7 @@ main {
   padding: 6px 20px 30px 20px;
   position: relative;
   z-index: 1;
-  background-color: $color-bg;
+  background-color: var(--color-bg);
 
   @media (max-width: $breakpoint-mobile) {
     padding: 6px 20px 30px 20px;
@@ -230,7 +274,7 @@ main {
     font-family: $font-serif;
     font-weight: 700;
     font-size: 15px;
-    color: $color-stamp-red;
+    color: var(--color-accent);
   }
 
   .range {
@@ -262,28 +306,28 @@ a.row {
   align-items: center;
   gap: 14px;
   text-decoration: none;
-  color: $color-ink;
+  color: var(--color-ink);
   padding: 9px 8px 9px 2px;
   transition: background 0.12s ease, padding-left 0.12s ease;
 
   @media (hover: hover) and (pointer: fine) {
     &:hover {
-      background: $color-stamp-red-soft;
+      background: var(--color-accent-soft);
       padding-left: 8px;
       outline: none;
 
       .go {
         opacity: 1;
-        color: $color-stamp-red;
+        color: var(--color-accent);
       }
     }
   }
 
   &:focus-visible {
-    background: $color-stamp-red-soft;
+    background: var(--color-accent-soft);
     padding-left: 8px;
     outline: none;
-    box-shadow: inset 2px 0 0 $color-stamp-red;
+    box-shadow: inset 2px 0 0 var(--color-accent);
   }
 
   &.is-read {
@@ -297,7 +341,7 @@ a.row {
   height: 34px;
   border-radius: 50%;
   border: none;
-  background-color: $color-stamp-bg;
+  background-color: var(--color-accent-bg);
   color: #fff;
   display: flex;
   align-items: center;
@@ -363,7 +407,7 @@ a.row {
   height: 44px;
   border-radius: 50%;
   border: 4px solid $color-border;
-  border-top-color: $color-stamp-red;
+  border-top-color: var(--color-accent);
   animation: state-spin 0.8s linear infinite;
 }
 
@@ -376,7 +420,7 @@ a.row {
 .state-text {
   font-family: $font-serif;
   font-size: 15px;
-  color: $color-ink;
+  color: var(--color-ink);
   margin: 0;
   text-align: center;
 }
@@ -392,7 +436,7 @@ a.row {
   font-family: inherit;
   font-size: 13px;
   font-weight: 700;
-  background: $color-stamp-bg;
+  background: var(--color-accent-bg);
   color: #fff;
   border: none;
   border-radius: 4px;
@@ -410,11 +454,11 @@ a.row {
 footer {
   flex: none;
   padding: 20px 20px 40px 20px;
-  color: $color-stamp-red;
+  color: var(--color-accent);
   font-size: 11.5px;
   position: relative;
   z-index: 1;
-  background-color: $color-bg;
+  background-color: var(--color-bg);
 
   a {
     color: $color-ledger-green;

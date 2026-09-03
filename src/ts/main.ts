@@ -26,16 +26,20 @@ type SortOrder = 'asc' | 'desc'
 /** 画面の状態。読み込み中 / 取得失敗 / 表示可能。 */
 type LoadState = 'loading' | 'error' | 'ready'
 
+/** カラーテーマ。'amber' = 通常配色、'lime' = 切り替え後の配色。 */
+type Theme = 'amber' | 'lime'
+
 /**
  * localStorage に保存する状態のかたち。
- * 既読話数・最後に読んだ話数・並び順を1つのキーにまとめて保存する
+ * 既読話数・最後に読んだ話数・並び順・カラーテーマを1つのキーにまとめて保存する
  * (localStorageのキーを増やしすぎないため)。
  *
  * 保存例:
  * {
  *   "readNums": [1, 2, 3, 42, 43, 44, 45, 46, 47],
  *   "lastReadNum": 47,
- *   "sortOrder": "desc"
+ *   "sortOrder": "desc",
+ *   "theme": "amber"
  * }
  */
 interface StoredState {
@@ -45,6 +49,8 @@ interface StoredState {
   lastReadNum: number | null
   /** 並び順 */
   sortOrder: SortOrder
+  /** カラーテーマ */
+  theme: Theme
 }
 
 /** アプリの状態をまとめて保存する localStorage のキー。 */
@@ -64,7 +70,7 @@ const GAS_API_URL = '__GAS_API_URL__'
  * @returns 読み込んだ(または既定の)状態
  */
 function loadStoredState (): StoredState {
-  const fallback: StoredState = { readNums: [], lastReadNum: null, sortOrder: 'desc' }
+  const fallback: StoredState = { readNums: [], lastReadNum: null, sortOrder: 'desc', theme: 'amber' }
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (raw === null) return fallback
@@ -78,8 +84,9 @@ function loadStoredState (): StoredState {
       : []
     const lastReadNum = typeof obj.lastReadNum === 'number' ? obj.lastReadNum : null
     const sortOrder: SortOrder = obj.sortOrder === 'asc' ? 'asc' : 'desc'
+    const theme: Theme = obj.theme === 'lime' ? 'lime' : 'amber'
 
-    return { readNums, lastReadNum, sortOrder }
+    return { readNums, lastReadNum, sortOrder, theme }
   } catch {
     return fallback
   }
@@ -95,7 +102,8 @@ function persistState (): void {
     const state: StoredState = {
       readNums: Array.from(readSet),
       lastReadNum,
-      sortOrder
+      sortOrder,
+      theme: currentTheme
     }
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
   } catch {
@@ -117,6 +125,9 @@ let lastReadNum: number | null = initialState.lastReadNum
 
 /** 現在の並び順(起動時に localStorage から読み込む。デフォルトは新しい順)。 */
 let sortOrder: SortOrder = initialState.sortOrder
+
+/** 現在のカラーテーマ(起動時に localStorage から読み込む)。 */
+let currentTheme: Theme = initialState.theme
 
 /** 画面の状態。起動直後は読み込み中。 */
 let loadState: LoadState = 'loading'
@@ -436,6 +447,36 @@ async function loadLiveData (): Promise<void> {
 }
 
 /**
+ * 指定したテーマを <html> の data-theme 属性に反映する。
+ *
+ * @param theme 適用するテーマ
+ */
+function applyTheme (theme: Theme): void {
+  if (theme === 'lime') {
+    document.documentElement.setAttribute('data-theme', 'lime')
+  } else {
+    document.documentElement.removeAttribute('data-theme')
+  }
+}
+
+/**
+ * カラーテーマ切り替えボタンの初期化。
+ * 起動時に保存済みのテーマを反映し、クリックのたびにテーマをトグルして
+ * <html> の data-theme 属性に反映・localStorage に保存する。
+ */
+function initThemeToggle (): void {
+  applyTheme(currentTheme)
+
+  const btn = document.querySelector('.theme-toggle')
+  if (btn === null) return
+  btn.addEventListener('click', () => {
+    currentTheme = currentTheme === 'lime' ? 'amber' : 'lime'
+    applyTheme(currentTheme)
+    persistState()
+  })
+}
+
+/**
  * アプリの初期化処理。
  * イベントリスナーの登録、読み込み中表示、ライブデータの取得を行う。
  */
@@ -444,6 +485,7 @@ function init (): void {
   searchEl.addEventListener('input', (e) => { render((e.target as HTMLInputElement).value) })
   sortAscBtn.addEventListener('click', () => { setSortOrder('asc') })
   sortDescBtn.addEventListener('click', () => { setSortOrder('desc') })
+  initThemeToggle()
 
   sortAscBtn.classList.toggle('active', sortOrder === 'asc')
   sortDescBtn.classList.toggle('active', sortOrder === 'desc')
