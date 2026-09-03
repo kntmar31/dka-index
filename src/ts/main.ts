@@ -349,7 +349,7 @@ function render (filterText: string): void {
 }
 
 /**
- * 「次に読むべき話数」の行までスムーズにスクロールし、見つけやすいよう一時的にハイライトする。
+ * 「次に読むべき話数」の行までスムーズにスクロールする。
  * 「次」は現在の並び順(表示順)に沿って決める。
  * - 新しい順(desc)で読み進めている場合、次は「話数 - 1」(下へ読み進む)
  * - 古い順(asc)で読み進めている場合、次は「話数 + 1」(上へ読み進む)
@@ -367,10 +367,6 @@ function scrollToNextUnread (): void {
   if (target === null) return
 
   target.scrollIntoView({ behavior: 'smooth', block: 'center' })
-  target.classList.add('is-next-up')
-  window.setTimeout(() => {
-    target.classList.remove('is-next-up')
-  }, 2200)
 }
 
 /**
