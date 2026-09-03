@@ -26,16 +26,20 @@ type SortOrder = 'asc' | 'desc'
 /** 画面の状態。読み込み中 / 取得失敗 / 表示可能。 */
 type LoadState = 'loading' | 'error' | 'ready'
 
+/** カラーテーマ。'default' = 通常配色、'alt' = 切り替え後の配色。 */
+type Theme = 'default' | 'alt'
+
 /**
  * localStorage に保存する状態のかたち。
- * 既読話数・最後に読んだ話数・並び順を1つのキーにまとめて保存する
+ * 既読話数・最後に読んだ話数・並び順・カラーテーマを1つのキーにまとめて保存する
  * (localStorageのキーを増やしすぎないため)。
  *
  * 保存例:
  * {
  *   "readNums": [1, 2, 3, 42, 43, 44, 45, 46, 47],
  *   "lastReadNum": 47,
- *   "sortOrder": "desc"
+ *   "sortOrder": "desc",
+ *   "theme": "default"
  * }
  */
 interface StoredState {
@@ -45,6 +49,8 @@ interface StoredState {
   lastReadNum: number | null
   /** 並び順 */
   sortOrder: SortOrder
+  /** カラーテーマ */
+  theme: Theme
 }
 
 /** アプリの状態をまとめて保存する localStorage のキー。 */
@@ -64,7 +70,7 @@ const GAS_API_URL = '__GAS_API_URL__'
  * @returns 読み込んだ(または既定の)状態
  */
 function loadStoredState (): StoredState {
-  const fallback: StoredState = { readNums: [], lastReadNum: null, sortOrder: 'desc' }
+  const fallback: StoredState = { readNums: [], lastReadNum: null, sortOrder: 'desc', theme: 'default' }
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (raw === null) return fallback
@@ -78,8 +84,9 @@ function loadStoredState (): StoredState {
       : []
     const lastReadNum = typeof obj.lastReadNum === 'number' ? obj.lastReadNum : null
     const sortOrder: SortOrder = obj.sortOrder === 'asc' ? 'asc' : 'desc'
+    const theme: Theme = obj.theme === 'alt' ? 'alt' : 'default'
 
-    return { readNums, lastReadNum, sortOrder }
+    return { readNums, lastReadNum, sortOrder, theme }
   } catch {
     return fallback
   }
@@ -95,7 +102,8 @@ function persistState (): void {
     const state: StoredState = {
       readNums: Array.from(readSet),
       lastReadNum,
-      sortOrder
+      sortOrder,
+      theme: currentTheme
     }
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
   } catch {
@@ -117,6 +125,9 @@ let lastReadNum: number | null = initialState.lastReadNum
 
 /** 現在の並び順(起動時に localStorage から読み込む。デフォルトは新しい順)。 */
 let sortOrder: SortOrder = initialState.sortOrder
+
+/** 現在のカラーテーマ(起動時に localStorage から読み込む)。 */
+let currentTheme: Theme = initialState.theme
 
 /** 画面の状態。起動直後は読み込み中。 */
 let loadState: LoadState = 'loading'
@@ -436,21 +447,32 @@ async function loadLiveData (): Promise<void> {
 }
 
 /**
+ * 指定したテーマを <html> の data-theme 属性に反映する。
+ *
+ * @param theme 適用するテーマ
+ */
+function applyTheme (theme: Theme): void {
+  if (theme === 'alt') {
+    document.documentElement.setAttribute('data-theme', 'alt')
+  } else {
+    document.documentElement.removeAttribute('data-theme')
+  }
+}
+
+/**
  * カラーテーマ切り替えボタンの初期化。
- * クリックのたびに <html> の data-theme 属性を 'alt' の付け外しでトグルし、
- * CSSカスタムプロパティ経由で背景・文字色・アクセントカラーを一括切り替える。
- * (現時点では選択状態を保存しない。セッション内のみの試作機能。)
+ * 起動時に保存済みのテーマを反映し、クリックのたびにテーマをトグルして
+ * <html> の data-theme 属性に反映・localStorage に保存する。
  */
 function initThemeToggle (): void {
+  applyTheme(currentTheme)
+
   const btn = document.querySelector('.theme-toggle')
   if (btn === null) return
   btn.addEventListener('click', () => {
-    const isAlt = document.documentElement.getAttribute('data-theme') === 'alt'
-    if (isAlt) {
-      document.documentElement.removeAttribute('data-theme')
-    } else {
-      document.documentElement.setAttribute('data-theme', 'alt')
-    }
+    currentTheme = currentTheme === 'alt' ? 'default' : 'alt'
+    applyTheme(currentTheme)
+    persistState()
   })
 }
 
