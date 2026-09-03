@@ -3,7 +3,7 @@
  *
  * 「堀さんと宮村くん 全話リスト」アプリのメインロジック。
  * - Google Apps Script API からのデータ取得(読み込み中/エラー状態の表示を含む)
- * - 既読管理(localStorage)
+ * - 既読管理・最後に読んだ話数・並び順の記憶(localStorage、単一キーにまとめて保存)
  * - 検索・並び替え
  * を担う。
  */
@@ -26,8 +26,29 @@ type SortOrder = 'asc' | 'desc'
 /** 画面の状態。読み込み中 / 取得失敗 / 表示可能。 */
 type LoadState = 'loading' | 'error' | 'ready'
 
-/** 既読状態を保存する localStorage のキー。 */
-const READ_STORAGE_KEY = 'hm_index_read_nums'
+/**
+ * localStorage に保存する状態のかたち。
+ * 既読話数・最後に読んだ話数・並び順を1つのキーにまとめて保存する
+ * (localStorageのキーを増やしすぎないため)。
+ *
+ * 保存例:
+ * {
+ *   "readNums": [1, 2, 3, 42, 43, 44, 45, 46, 47],
+ *   "lastReadNum": 47,
+ *   "sortOrder": "desc"
+ * }
+ */
+interface StoredState {
+  /** 既読になっている話数の一覧 */
+  readNums: number[]
+  /** 最後に開いた話数(未保存の場合は null) */
+  lastReadNum: number | null
+  /** 並び順 */
+  sortOrder: SortOrder
+}
+
+/** アプリの状態をまとめて保存する localStorage のキー。 */
+const STORAGE_KEY = 'dka-index'
 
 /**
  * GAS_API_URL は deploy 時に build.js によって書き換えられるプレースホルダー。
@@ -36,17 +57,75 @@ const READ_STORAGE_KEY = 'hm_index_read_nums'
  */
 const GAS_API_URL = '__GAS_API_URL__'
 
+/**
+ * localStorage から保存済みの状態を読み込む。
+ * 値が壊れている・取得できない場合はデフォルト値を返す(例外を投げない)。
+ *
+ * @returns 読み込んだ(または既定の)状態
+ */
+function loadStoredState (): StoredState {
+  const fallback: StoredState = { readNums: [], lastReadNum: null, sortOrder: 'desc' }
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY)
+    if (raw === null) return fallback
+
+    const parsed: unknown = JSON.parse(raw)
+    if (typeof parsed !== 'object' || parsed === null) return fallback
+
+    const obj = parsed as Partial<StoredState>
+    const readNums = Array.isArray(obj.readNums)
+      ? obj.readNums.filter((n): n is number => typeof n === 'number')
+      : []
+    const lastReadNum = typeof obj.lastReadNum === 'number' ? obj.lastReadNum : null
+    const sortOrder: SortOrder = obj.sortOrder === 'asc' ? 'asc' : 'desc'
+
+    return { readNums, lastReadNum, sortOrder }
+  } catch {
+    return fallback
+  }
+}
+
+/**
+ * 現在のアプリ状態(既読集合・最後に読んだ話数・並び順)を
+ * 1つの localStorage キーにまとめて保存する。
+ * プライベートブラウジングなどで保存に失敗しても黙って諦める(UIを壊さない)。
+ */
+function persistState (): void {
+  try {
+    const state: StoredState = {
+      readNums: Array.from(readSet),
+      lastReadNum,
+      sortOrder
+    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+  } catch {
+    // localStorageが使えない環境では何もしない
+  }
+}
+
+/** 起動時に読み込んだ保存済み状態。 */
+const initialState = loadStoredState()
+
 /** アプリが現在表示に使っているデータ。取得完了までは空。 */
 let DATA: Episode[] = []
 
-/** 現在の並び順。デフォルトは新しい順。 */
-let sortOrder: SortOrder = 'desc'
+/** 現在の既読話数の集合(起動時に localStorage から読み込む)。 */
+const readSet: Set<number> = new Set(initialState.readNums)
+
+/** 最後に開いた話数(起動時に localStorage から読み込む)。 */
+let lastReadNum: number | null = initialState.lastReadNum
+
+/** 現在の並び順(起動時に localStorage から読み込む。デフォルトは新しい順)。 */
+let sortOrder: SortOrder = initialState.sortOrder
 
 /** 画面の状態。起動直後は読み込み中。 */
 let loadState: LoadState = 'loading'
 
 /** 取得に失敗した場合のエラーメッセージ。 */
 let loadErrorMessage = ''
+
+/** 起動後、次に読むべき話数への自動スクロールを既に行ったかどうか。 */
+let hasScrolledToLastRead = false
 
 const mainEl = document.getElementById('main') as HTMLElement
 const countEl = document.getElementById('count') as HTMLElement
@@ -55,53 +134,20 @@ const sortAscBtn = document.getElementById('sortAsc') as HTMLButtonElement
 const sortDescBtn = document.getElementById('sortDesc') as HTMLButtonElement
 
 /**
- * localStorage から既読話数の集合を読み込む。
- * 値が壊れている・取得できない場合は空集合を返す(例外を投げない)。
- *
- * @returns 既読になっている話数の Set
- */
-function loadReadSet (): Set<number> {
-  try {
-    const raw = localStorage.getItem(READ_STORAGE_KEY)
-    const arr: unknown = raw != null ? JSON.parse(raw) : []
-    return new Set(Array.isArray(arr) ? (arr as number[]) : [])
-  } catch {
-    return new Set()
-  }
-}
-
-/**
- * 既読話数の集合を localStorage に保存する。
- * プライベートブラウジングなどで保存に失敗しても黙って諦める(UIを壊さない)。
- *
- * @param set 保存する既読話数の集合
- */
-function saveReadSet (set: Set<number>): void {
-  try {
-    localStorage.setItem(READ_STORAGE_KEY, JSON.stringify(Array.from(set)))
-  } catch {
-    // localStorageが使えない環境では何もしない
-  }
-}
-
-/** 現在の既読話数の集合(起動時に localStorage から読み込む)。 */
-const readSet: Set<number> = loadReadSet()
-
-/**
- * 指定した話数を既読としてマークし、必要であれば localStorage に保存する。
- * 既に既読の場合は何もしない(保存処理を無駄に呼ばない)。
+ * 指定した話数を既読としてマークする。
+ * 保存は呼び出し側で persistState() をまとめて行う(1クリックにつき書き込み1回にするため)。
  *
  * @param num 既読にする話数
  */
 function markRead (num: number): void {
-  if (readSet.has(num)) return
   readSet.add(num)
-  saveReadSet(readSet)
 }
 
 /**
  * 話一覧のクリックイベントハンドラ。
  * クリックされたリンクの話数を既読にし、その場で見た目(is-read)を更新する。
+ * あわせて「最後に開いた話数」を更新し、まとめて localStorage に保存する。
+ * これにより次回開いたときにその続きまで自動スクロールできるようにする。
  * タッチデバイスでは :hover が残り続ける「スタックしたhover」対策として、
  * 既読化したあとにフォーカスも明示的に外す(blur)。
  *
@@ -116,6 +162,8 @@ function handleListClick (e: MouseEvent): void {
   const num = numAttr !== null ? parseInt(numAttr, 10) : NaN
   if (!Number.isNaN(num)) {
     markRead(num)
+    lastReadNum = num
+    persistState()
     link.classList.add('is-read')
   }
   if (link instanceof HTMLElement) {
@@ -124,12 +172,13 @@ function handleListClick (e: MouseEvent): void {
 }
 
 /**
- * 並び順を切り替え、ボタンの見た目(active状態)を更新したうえで再描画する。
+ * 並び順を切り替え、保存し、ボタンの見た目(active状態)を更新したうえで再描画する。
  *
  * @param order 新しい並び順
  */
 function setSortOrder (order: SortOrder): void {
   sortOrder = order
+  persistState()
   sortAscBtn.classList.toggle('active', order === 'asc')
   sortDescBtn.classList.toggle('active', order === 'desc')
   render(searchEl.value)
@@ -300,6 +349,31 @@ function render (filterText: string): void {
 }
 
 /**
+ * 「次に読むべき話数」の行までスムーズにスクロールし、見つけやすいよう一時的にハイライトする。
+ * 「次」は現在の並び順(表示順)に沿って決める。
+ * - 新しい順(desc)で読み進めている場合、次は「話数 - 1」(下へ読み進む)
+ * - 古い順(asc)で読み進めている場合、次は「話数 + 1」(上へ読み進む)
+ * 起動後1度だけ実行する(検索・並び替えのたびには行わない)。
+ * 次の話数がリストに存在しない場合(読み進めた末端に達している場合など)は何もしない。
+ */
+function scrollToNextUnread (): void {
+  if (hasScrolledToLastRead) return
+  hasScrolledToLastRead = true
+
+  if (lastReadNum === null) return
+
+  const nextNum = sortOrder === 'desc' ? lastReadNum - 1 : lastReadNum + 1
+  const target = mainEl.querySelector('[data-num="' + String(nextNum) + '"]')
+  if (target === null) return
+
+  target.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  target.classList.add('is-next-up')
+  window.setTimeout(() => {
+    target.classList.remove('is-next-up')
+  }, 2200)
+}
+
+/**
  * Google Apps Script API から話数リストを取得する。
  * 成功すれば DATA にセットして一覧を表示し、失敗すればエラー状態を表示する。
  */
@@ -341,7 +415,7 @@ async function loadLiveData (): Promise<void> {
     DATA = episodes
     loadState = 'ready'
 
-    // 既読情報(localStorage)を新しい話数リストに合わせて整合させる。
+    // 既読情報を新しい話数リストに合わせて整合させる。
     // 存在しない番号が既読セットに残っていれば取り除いて保存し直す。
     const validNums = new Set(episodes.map((ep) => ep.num))
     let readSetChanged = false
@@ -352,10 +426,11 @@ async function loadLiveData (): Promise<void> {
       }
     })
     if (readSetChanged) {
-      saveReadSet(readSet)
+      persistState()
     }
 
     render(searchEl.value)
+    scrollToNextUnread()
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
     loadState = 'error'
