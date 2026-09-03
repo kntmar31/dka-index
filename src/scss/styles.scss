@@ -28,7 +28,7 @@ $breakpoint-mobile: 600px;
 // -------------------------------------------------------------
 // テーマ変数(カラーテーマ切り替え)
 // 背景・文字色・アクセントカラーをCSSカスタムプロパティにしておき、
-// <html> に data-theme="alt" を付け外しするだけで一括切り替えできるようにする。
+// <html> に data-theme="lime" を付け外しするだけで一括切り替えできるようにする。
 // --color-bg-next は「切り替え先」の背景色で、テーマ切り替えボタン自体の
 // 色に使う(現在の背景に埋もれないよう、次のテーマの色を示す)。
 // -------------------------------------------------------------
@@ -38,16 +38,16 @@ $breakpoint-mobile: 600px;
   --color-accent: #aa3b2e;
   --color-accent-bg: #bc5a46;
   --color-accent-soft: rgba(170, 59, 46, 0.13);
-  --color-bg-next: #cfff00; // 切り替え先(altテーマ)の背景色
+  --color-bg-next: #cfff00; // 切り替え先(limeテーマ)の背景色
 }
 
-html[data-theme='alt'] {
+html[data-theme='lime'] {
   --color-bg: #cfff00;
   --color-ink: #000000;
   --color-accent: #df0040;
   --color-accent-bg: #000000;
   --color-accent-soft: rgba(223, 0, 64, 0.13);
-  --color-bg-next: #ffc600; // 切り替え先(デフォルトテーマ)の背景色
+  --color-bg-next: #ffc600; // 切り替え先(amberテーマ)の背景色
 }
 
 // -------------------------------------------------------------
