@@ -436,6 +436,25 @@ async function loadLiveData (): Promise<void> {
 }
 
 /**
+ * カラーテーマ切り替えボタンの初期化。
+ * クリックのたびに <html> の data-theme 属性を 'alt' の付け外しでトグルし、
+ * CSSカスタムプロパティ経由で背景・文字色・アクセントカラーを一括切り替える。
+ * (現時点では選択状態を保存しない。セッション内のみの試作機能。)
+ */
+function initThemeToggle (): void {
+  const btn = document.querySelector('.theme-toggle')
+  if (btn === null) return
+  btn.addEventListener('click', () => {
+    const isAlt = document.documentElement.getAttribute('data-theme') === 'alt'
+    if (isAlt) {
+      document.documentElement.removeAttribute('data-theme')
+    } else {
+      document.documentElement.setAttribute('data-theme', 'alt')
+    }
+  })
+}
+
+/**
  * アプリの初期化処理。
  * イベントリスナーの登録、読み込み中表示、ライブデータの取得を行う。
  */
@@ -444,6 +463,7 @@ function init (): void {
   searchEl.addEventListener('input', (e) => { render((e.target as HTMLInputElement).value) })
   sortAscBtn.addEventListener('click', () => { setSortOrder('asc') })
   sortDescBtn.addEventListener('click', () => { setSortOrder('desc') })
+  initThemeToggle()
 
   sortAscBtn.classList.toggle('active', sortOrder === 'asc')
   sortDescBtn.classList.toggle('active', sortOrder === 'desc')
