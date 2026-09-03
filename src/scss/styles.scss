@@ -289,24 +289,6 @@ a.row {
   &.is-read {
     opacity: 0.5;
   }
-
-  // 「次に読むべき話数」への自動スクロール直後、見つけやすいよう一時的にハイライトする。
-  // 対象は基本的に未読(opacity: 1)の行なので、アニメーションの終わりもそこに合わせる。
-  &.is-next-up {
-    animation: next-up-flash 2.2s ease-out;
-  }
-}
-
-@keyframes next-up-flash {
-  0%,
-  35% {
-    background: $color-stamp-red-soft;
-    opacity: 1;
-  }
-  100% {
-    background: transparent;
-    opacity: 1;
-  }
 }
 
 .stamp {
