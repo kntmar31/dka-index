@@ -181,8 +181,10 @@ h1 {
       color: #9c9484;
     }
 
+    // 16px未満だとiOS Safariがフォーカス時に自動でズームしてしまうため、
+    // モバイル幅でも16px以上を保つ(拡大を防ぐ)。
     @media (max-width: $breakpoint-mobile) {
-      font-size: 14px;
+      font-size: 16px;
     }
   }
 }
