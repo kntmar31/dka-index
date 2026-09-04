@@ -487,6 +487,10 @@ footer {
   flex-direction: column;
   align-items: flex-end;
   gap: 10px;
+  // iOS Safariでは、position: fixed の要素がスクロール(特に慣性スクロール)直後に
+  // ヒットテスト(タップ位置の判定)が一瞬古いままになり、タップが反応しないことがある。
+  // GPUの合成レイヤーに昇格させておくことで、スクロール中も正しく追従・判定されるようにする。
+  transform: translateZ(0);
 }
 
 .fab-menu {
