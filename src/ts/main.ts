@@ -138,6 +138,7 @@ let loadErrorMessage = ''
 /** 起動後、次に読むべき話数への自動スクロールを既に行ったかどうか。 */
 let hasScrolledToLastRead = false
 
+const headerEl = document.querySelector('header') as HTMLElement
 const mainEl = document.getElementById('main') as HTMLElement
 const countEl = document.getElementById('count') as HTMLElement
 const searchEl = document.getElementById('search') as HTMLInputElement
@@ -183,7 +184,65 @@ function handleListClick (e: MouseEvent): void {
 }
 
 /**
+ * mainEl内の話数一覧(現在の表示順)の中で、指定した話数から
+ * offset個ぶん前後にずれた行要素を取得する。範囲外の場合は最も近い端の行を返す。
+ *
+ * @param num 基準となる話数
+ * @param offset ずらす件数(正の値で後ろ、負の値で前)
+ * @returns 見つかった行要素。基準の話数自体が一覧に無い場合は null
+ */
+function getRowOffsetFrom (num: number, offset: number): Element | null {
+  const rows = Array.from(mainEl.querySelectorAll('a.row[data-num]'))
+  const index = rows.findIndex((row) => row.getAttribute('data-num') === String(num))
+  if (index === -1) return null
+
+  const clampedIndex = Math.min(Math.max(index + offset, 0), rows.length - 1)
+  return rows[clampedIndex]
+}
+
+/**
+ * 指定した話数の行を、現在の並び順に応じた見え方でスクロールする。
+ * - 古い順(asc): 対象が画面の上から3番目くらいの位置に来るようにする
+ *   (2つ前の話数の行をヘッダー直下に揃える)
+ * - 新しい順(desc): 対象が画面の下から3番目くらいの位置に来るようにする
+ *   (2つ後の話数の行を画面下端に揃える)
+ * 先頭/末尾付近で2つ前後の行が無い場合は自動的にクランプされる。
+ *
+ * @param num スクロール先の話数
+ * @param behavior スクロールの挙動('auto' = 瞬時、'smooth' = アニメーション)
+ */
+function scrollToEpisode (num: number, behavior: ScrollBehavior): void {
+  const target = mainEl.querySelector('[data-num="' + String(num) + '"]')
+  if (target === null) return
+
+  if (sortOrder === 'asc') {
+    const anchorRow = getRowOffsetFrom(num, -2)
+    const el = anchorRow !== null ? anchorRow : target
+    el.scrollIntoView({ behavior, block: 'start' })
+  } else {
+    const anchorRow = getRowOffsetFrom(num, 2)
+    const el = anchorRow !== null ? anchorRow : target
+    el.scrollIntoView({ behavior, block: 'end' })
+  }
+}
+
+/**
+ * 並び順を切り替えたあとのスクロール位置を調整する。
+ * 「最後に読んだ話数」(lastReadNum)の行が、現在の並び順に応じた位置に来るようスクロールする。
+ * lastReadNum が null の場合(まだ何も読んでいない場合)は画面の一番上に戻す。
+ */
+function restoreScrollAfterSort (): void {
+  if (lastReadNum === null) {
+    window.scrollTo(0, 0)
+    return
+  }
+
+  scrollToEpisode(lastReadNum, 'auto')
+}
+
+/**
  * 並び順を切り替え、保存し、ボタンの見た目(active状態)を更新したうえで再描画する。
+ * 再描画後、スクロール位置を「最後に読んだ話数」に合わせ直す。
  *
  * @param order 新しい並び順
  */
@@ -193,6 +252,8 @@ function setSortOrder (order: SortOrder): void {
   sortAscBtn.classList.toggle('active', order === 'asc')
   sortDescBtn.classList.toggle('active', order === 'desc')
   render(searchEl.value)
+
+  restoreScrollAfterSort()
 }
 
 /**
@@ -374,10 +435,7 @@ function scrollToNextUnread (): void {
   if (lastReadNum === null) return
 
   const nextNum = sortOrder === 'desc' ? lastReadNum - 1 : lastReadNum + 1
-  const target = mainEl.querySelector('[data-num="' + String(nextNum) + '"]')
-  if (target === null) return
-
-  target.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  scrollToEpisode(nextNum, 'smooth')
 }
 
 /**
@@ -477,6 +535,16 @@ function initThemeToggle (): void {
 }
 
 /**
+ * ヘッダーの実際の高さを CSS カスタムプロパティ(--header-h)に反映する。
+ * a.row の scroll-margin-top で参照し、scrollIntoView({ block: 'start' }) で
+ * スクロールした際に、固定ヘッダーの下に話数の行が隠れないようにする。
+ * ヘッダーの高さはレスポンシブ対応で画面幅により変わるため、リサイズ時にも呼び直す。
+ */
+function updateHeaderHeightVar (): void {
+  document.documentElement.style.setProperty('--header-h', String(headerEl.offsetHeight) + 'px')
+}
+
+/**
  * アプリの初期化処理。
  * イベントリスナーの登録、読み込み中表示、ライブデータの取得を行う。
  */
@@ -486,6 +554,9 @@ function init (): void {
   sortAscBtn.addEventListener('click', () => { setSortOrder('asc') })
   sortDescBtn.addEventListener('click', () => { setSortOrder('desc') })
   initThemeToggle()
+
+  updateHeaderHeightVar()
+  window.addEventListener('resize', updateHeaderHeightVar)
 
   sortAscBtn.classList.toggle('active', sortOrder === 'asc')
   sortDescBtn.classList.toggle('active', sortOrder === 'desc')
