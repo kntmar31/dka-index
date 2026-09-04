@@ -5,6 +5,7 @@
  * - Google Apps Script API からのデータ取得(読み込み中/エラー状態の表示を含む)
  * - 既読管理・最後に読んだ話数・並び順の記憶(localStorage、単一キーにまとめて保存)
  * - 検索・並び替え
+ * - 右下のFAB(フローティングアクションボタン)によるクイックメニュー
  * を担う。
  */
 
@@ -421,10 +422,19 @@ function render (filterText: string): void {
 }
 
 /**
- * 「次に読むべき話数」の行までスムーズにスクロールする。
- * 「次」は現在の並び順(表示順)に沿って決める。
+ * 現在の並び順(表示順)に沿って「次に読むべき話数」を計算する。
  * - 新しい順(desc)で読み進めている場合、次は「話数 - 1」(下へ読み進む)
  * - 古い順(asc)で読み進めている場合、次は「話数 + 1」(上へ読み進む)
+ *
+ * @returns 次に読むべき話数。lastReadNum が未設定の場合は null
+ */
+function getNextUnreadNum (): number | null {
+  if (lastReadNum === null) return null
+  return sortOrder === 'desc' ? lastReadNum - 1 : lastReadNum + 1
+}
+
+/**
+ * 「次に読むべき話数」の行までスムーズにスクロールする。
  * 起動後1度だけ実行する(検索・並び替えのたびには行わない)。
  * 次の話数がリストに存在しない場合(読み進めた末端に達している場合など)は何もしない。
  */
@@ -432,9 +442,8 @@ function scrollToNextUnread (): void {
   if (hasScrolledToLastRead) return
   hasScrolledToLastRead = true
 
-  if (lastReadNum === null) return
-
-  const nextNum = sortOrder === 'desc' ? lastReadNum - 1 : lastReadNum + 1
+  const nextNum = getNextUnreadNum()
+  if (nextNum === null) return
   scrollToEpisode(nextNum, 'smooth')
 }
 
@@ -518,20 +527,25 @@ function applyTheme (theme: Theme): void {
 }
 
 /**
+ * カラーテーマを切り替え、反映・保存する。
+ * ヘッダーのテーマ切替ボタンとFABメニューの両方から共通で呼び出される。
+ */
+function toggleTheme (): void {
+  currentTheme = currentTheme === 'lime' ? 'amber' : 'lime'
+  applyTheme(currentTheme)
+  persistState()
+}
+
+/**
  * カラーテーマ切り替えボタンの初期化。
- * 起動時に保存済みのテーマを反映し、クリックのたびにテーマをトグルして
- * <html> の data-theme 属性に反映・localStorage に保存する。
+ * 起動時に保存済みのテーマを反映し、クリックのたびにテーマをトグルする。
  */
 function initThemeToggle (): void {
   applyTheme(currentTheme)
 
   const btn = document.querySelector('.theme-toggle')
   if (btn === null) return
-  btn.addEventListener('click', () => {
-    currentTheme = currentTheme === 'lime' ? 'amber' : 'lime'
-    applyTheme(currentTheme)
-    persistState()
-  })
+  btn.addEventListener('click', toggleTheme)
 }
 
 /**
@@ -545,6 +559,149 @@ function updateHeaderHeightVar (): void {
 }
 
 /**
+ * 右下のFAB(フローティングアクションボタン)クイックメニューを初期化する。
+ *
+ * 操作方法:
+ * - PC(マウス): クリックした瞬間に開閉をトグルする(長押し判定はしない)
+ * - スマートフォン(タッチ): タップで開閉をトグル、長押し(200ms)すると
+ *   振動フィードバックとともに開く。開閉ボタン自体は押している間、
+ *   1秒かけてゆっくり縮む「チャージ」のような視覚フィードバックを見せる
+ *   (メニューが実際に開く判定はそれより早いタイミングで行われるため、
+ *   縮みきる前にメニューが開き始めることがある)。
+ *
+ * メニューが開いている間は、開閉ボタン自体が少し縮んで「閉じる(✕)」アイコンに変わる。
+ */
+function initFab (): void {
+  const LONG_PRESS_TRIGGER_MS = 200
+  const CLOSE_ICON = '\u2715' // ✕
+  const OPEN_ICON = '\u22EE' // ⋮
+
+  const fabMainEl = document.getElementById('fabMain')
+  const fabMenuEl = document.getElementById('fabMenu')
+  if (fabMainEl === null || fabMenuEl === null) return
+
+  // ネストした関数(クロージャ)の中でも非nullとして扱えるよう、
+  // 明示的な非null型で束ね直しておく。
+  const fabMain: HTMLElement = fabMainEl
+  const fabMenu: HTMLElement = fabMenuEl
+
+  let pressTimer: number | null = null
+  let longPressTriggered = false
+
+  /**
+   * メニューの開閉状態に合わせて、開閉ボタンの見た目(サイズ・アイコン)を同期する。
+   * 長押し・タップどちらで開いても同じ見た目にする。
+   */
+  function syncFabMainVisual (): void {
+    const isOpen = fabMenu.classList.contains('is-open')
+    fabMain.classList.toggle('is-open', isOpen)
+    fabMain.textContent = isOpen ? CLOSE_ICON : OPEN_ICON
+  }
+
+  function openMenu (): void {
+    fabMenu.classList.add('is-open')
+    syncFabMainVisual()
+  }
+
+  function closeMenu (): void {
+    fabMenu.classList.remove('is-open')
+    fabMain.classList.remove('is-pressing')
+    syncFabMainVisual()
+  }
+
+  function toggleMenu (): void {
+    if (fabMenu.classList.contains('is-open')) {
+      closeMenu()
+    } else {
+      openMenu()
+    }
+  }
+
+  function scrollToTop (): void {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  function fabScrollToNextUnread (): void {
+    const nextNum = getNextUnreadNum()
+    if (nextNum === null) return
+    scrollToEpisode(nextNum, 'smooth')
+  }
+
+  function fabToggleSort (): void {
+    setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
+  }
+
+  function handlePointerDown (e: PointerEvent): void {
+    // PC(マウス)では長押し判定を行わない。クリック(pointerup)で即座にトグルする。
+    if (e.pointerType === 'mouse') return
+
+    longPressTriggered = false
+    // 縮むアニメーション自体はここで開始(CSS側のtransitionでゆっくり進む)。
+    fabMain.classList.add('is-pressing')
+    // メニューを実際に開く判定は、アニメーションの完了を待たず少し早めに行う。
+    pressTimer = window.setTimeout(() => {
+      longPressTriggered = true
+      openMenu() // is-pressing は残したまま(縮みアニメーションはそのまま続行させる)
+      if (window.navigator.vibrate !== undefined) window.navigator.vibrate(15)
+    }, LONG_PRESS_TRIGGER_MS)
+  }
+
+  function handlePointerUp (e: PointerEvent): void {
+    // PC(マウス)ではここで即座にトグルする(長押し判定を経由しない)。
+    if (e.pointerType === 'mouse') {
+      toggleMenu()
+      return
+    }
+
+    fabMain.classList.remove('is-pressing')
+    if (pressTimer !== null) {
+      window.clearTimeout(pressTimer)
+      pressTimer = null
+    }
+    if (!longPressTriggered) {
+      // 長押しでなければ、通常のタップとして開閉をトグルする
+      toggleMenu()
+    }
+  }
+
+  function handlePointerCancel (e: PointerEvent): void {
+    if (e.pointerType === 'mouse') return
+
+    fabMain.classList.remove('is-pressing')
+    if (pressTimer !== null) {
+      window.clearTimeout(pressTimer)
+      pressTimer = null
+    }
+  }
+
+  fabMain.addEventListener('pointerdown', handlePointerDown)
+  fabMain.addEventListener('pointerup', handlePointerUp)
+  fabMain.addEventListener('pointerleave', handlePointerCancel)
+  fabMain.addEventListener('pointercancel', handlePointerCancel)
+  fabMain.addEventListener('contextmenu', (e) => { e.preventDefault() })
+
+  document.querySelectorAll('.fab-item').forEach((item) => {
+    item.addEventListener('click', () => {
+      const action = item.getAttribute('data-action')
+      if (action === 'top') scrollToTop()
+      if (action === 'next') fabScrollToNextUnread()
+      if (action === 'theme') toggleTheme()
+      if (action === 'sort') fabToggleSort()
+      closeMenu()
+    })
+  })
+
+  document.addEventListener('click', (e) => {
+    const target = e.target
+    if (target instanceof Element && target.closest('.fab-wrap') === null) {
+      closeMenu()
+    }
+  })
+
+  syncFabMainVisual()
+}
+
+/**
  * アプリの初期化処理。
  * イベントリスナーの登録、読み込み中表示、ライブデータの取得を行う。
  */
@@ -554,6 +711,7 @@ function init (): void {
   sortAscBtn.addEventListener('click', () => { setSortOrder('asc') })
   sortDescBtn.addEventListener('click', () => { setSortOrder('desc') })
   initThemeToggle()
+  initFab()
 
   updateHeaderHeightVar()
   window.addEventListener('resize', updateHeaderHeightVar)
