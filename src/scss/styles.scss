@@ -471,3 +471,143 @@ footer {
     color: $color-ledger-green;
   }
 }
+
+// -------------------------------------------------------------
+// FAB(フローティングアクションボタン)
+// - PC(マウス): クリックで即座にサブメニューの開閉をトグルする
+// - スマートフォン(タッチ): タップでトグル、長押しすると振動フィードバックと
+//   ともに開く(押している間、少しずつ縮む「チャージ」のような視覚効果)
+// -------------------------------------------------------------
+.fab-wrap {
+  position: fixed;
+  right: 30px;
+  bottom: 60px;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.fab-menu {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(8px);
+  transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s;
+
+  &.is-open {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+}
+
+.fab-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fab-label {
+  background: var(--color-ink);
+  color: var(--color-bg);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  padding: 5px 10px;
+  border-radius: 4px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+// fab-main とサブメニューの丸ボタンの中心を縦軸で揃えるため、
+// どちらも同じ56px幅のスロットの中で中央寄せする
+// (fab-mainは開閉時にサイズが変わるため、スロットで幅を固定しないと
+// align-items: flex-end の右揃えの影響で中心がズレてしまう)。
+.fab-item-slot,
+.fab-main-slot {
+  width: 56px;
+  flex: none;
+  display: flex;
+  justify-content: center;
+}
+
+.fab-item {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: none;
+  background: $color-card-bg;
+  color: var(--color-ink);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+  font-size: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex: none;
+
+  &:active {
+    transform: scale(0.94);
+  }
+}
+
+// 「次の未読話へ」アイコン。絵文字化しやすいUnicode文字(⏭など)は使わず、
+// CSSのボーダートリックで右向き三角形を描く(機種・フォントに依存しないようにするため)。
+.icon-next {
+  display: inline-block;
+  width: 0;
+  height: 0;
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+  border-left: 13px solid currentColor;
+}
+
+.fab-main {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: none;
+  background: var(--color-accent-bg);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  font-size: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+  // iOS標準の長押しコールアウト(画像保存メニューなど)を抑止し、自前の長押し判定と競合しないようにする
+  -webkit-touch-callout: none;
+  touch-action: none;
+  transition: width 0.15s ease, height 0.15s ease, font-size 0.15s ease;
+
+  // メニューが開いている間は少し小さくなり、閉じるボタンとしての見た目になる
+  // (open/closeの状態そのものに連動させる。長押し・タップどちらで開いても同じ見た目にする)。
+  // transitionを明示しておくことで、is-pressingが付いていない(=タップだけで開いた)場合でも
+  // 常に一定の速さ(0.15s)で切り替わるようにする。
+  &.is-open {
+    width: 46px;
+    height: 46px;
+    font-size: 18px;
+    transition: width 0.15s ease, height 0.15s ease, font-size 0.15s ease;
+  }
+
+  // 押している間、1秒かけてゆっくり縮んでいく「チャージ」のような視覚フィードバック
+  // (スマートフォンでの長押し時のみ発生。PCではマウスクリックで即座にトグルするため付与されない)。
+  // メニューが実際に開く判定(main.ts側)はこれより短い時間で行われるため、
+  // 縮みきる前にメニューが開き始めることがある(意図した挙動)。
+  // is-open と同じ詳細度(クラス2つ)だが、CSSでは同じ詳細度の場合ソースで後にある
+  // ルールが勝つため、is-pressingをis-openより後ろに書くことで、長押し中
+  // (両方のクラスが同時に付いている間)は常にこちら(1s)が優先されるようにしている。
+  &.is-pressing {
+    width: 46px;
+    height: 46px;
+    font-size: 18px;
+    transition: width 1s linear, height 1s linear, font-size 1s linear;
+  }
+}
