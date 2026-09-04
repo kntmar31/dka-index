@@ -77,6 +77,8 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  overflow-anchor: none; // ブラウザ標準のスクロールアンカリングを無効化し、
+                          // 自前のスクロール補正(scrollToEpisodeなど)とぶつからないようにする
 }
 
 // -------------------------------------------------------------
@@ -301,6 +303,8 @@ li.entry {
 // 各話へのリンク行。
 // :hover はタッチデバイスで「スタックしたhover」を起こさないよう、
 // 実際にホバー可能な環境(マウスなど)にのみ適用する。
+// scroll-margin-top は scrollIntoView({ block: 'start' }) 時に、
+// 固定ヘッダー(sticky)の下に隠れないようにするための余白。
 a.row {
   display: flex;
   align-items: center;
@@ -308,6 +312,7 @@ a.row {
   text-decoration: none;
   color: var(--color-ink);
   padding: 9px 8px 9px 2px;
+  scroll-margin-top: var(--header-h, 140px);
   transition: background 0.12s ease, padding-left 0.12s ease;
 
   @media (hover: hover) and (pointer: fine) {
