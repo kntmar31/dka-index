@@ -601,17 +601,17 @@ footer {
     transition: width 0.15s ease, height 0.15s ease, font-size 0.15s ease;
   }
 
-  // 押している間、1秒かけてゆっくり縮んでいく「チャージ」のような視覚フィードバック
+  // 押している間、ゆっくり縮んでいく「チャージ」のような視覚フィードバック
   // (スマートフォンでの長押し時のみ発生。PCではマウスクリックで即座にトグルするため付与されない)。
   // メニューが実際に開く判定(main.ts側)はこれより短い時間で行われるため、
   // 縮みきる前にメニューが開き始めることがある(意図した挙動)。
   // is-open と同じ詳細度(クラス2つ)だが、CSSでは同じ詳細度の場合ソースで後にある
   // ルールが勝つため、is-pressingをis-openより後ろに書くことで、長押し中
-  // (両方のクラスが同時に付いている間)は常にこちら(1s)が優先されるようにしている。
+  // (両方のクラスが同時に付いている間)は常にこちら(0.15s)が優先されるようにしている。
   &.is-pressing {
     width: 46px;
     height: 46px;
     font-size: 18px;
-    transition: width 1s linear, height 1s linear, font-size 1s linear;
+    transition: width 0.15s linear, height 0.15s linear, font-size 0.15s linear;
   }
 }
