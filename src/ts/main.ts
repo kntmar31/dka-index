@@ -559,13 +559,42 @@ function updateHeaderHeightVar (): void {
 }
 
 /**
+ * iOS Safariでは、スクロールに伴うツールバー(アドレスバー)の表示/非表示アニメーション中、
+ * 「レイアウトビューポート」と「実際に見えているビューポート(visual viewport)」の間に
+ * 一時的なズレが生じる。position: fixed の要素(FABなど)はレイアウトビューポート基準で
+ * 位置決めされるため、このズレの間、見た目の位置は正しいのにタップ判定だけがずれてしまう
+ * ことがある(特にツールバーが再表示される、上方向へのスクロール時に起こりやすい)。
+ *
+ * window.visualViewport から実際に見えている範囲を取得し、レイアウトビューポートとの
+ * 差分を CSS カスタムプロパティ(--fab-vv-offset)に反映することで、FABの位置を
+ * 実際に見えているビューポートに追従させ、タップ判定のズレを避ける。
+ */
+function initFabViewportSync (): void {
+  const visualViewportEl = window.visualViewport
+  if (visualViewportEl === null) return
+
+  // ネストした関数(クロージャ)の中でも非nullとして扱えるよう、
+  // 明示的な非null型で束ね直しておく。
+  const vv: VisualViewport = visualViewportEl
+
+  function sync (): void {
+    const offset = window.innerHeight - (vv.height + vv.offsetTop)
+    document.documentElement.style.setProperty('--fab-vv-offset', String(Math.max(offset, 0)) + 'px')
+  }
+
+  vv.addEventListener('resize', sync)
+  vv.addEventListener('scroll', sync)
+  sync()
+}
+
+/**
  * 右下のFAB(フローティングアクションボタン)クイックメニューを初期化する。
  *
  * 操作方法:
  * - PC(マウス): クリックした瞬間に開閉をトグルする(長押し判定はしない)
  * - スマートフォン(タッチ): タップで開閉をトグル、長押し(200ms)すると
  *   振動フィードバックとともに開く。開閉ボタン自体は押している間、
- *   1秒かけてゆっくり縮む「チャージ」のような視覚フィードバックを見せる
+ *   ゆっくり縮む「チャージ」のような視覚フィードバックを見せる
  *   (メニューが実際に開く判定はそれより早いタイミングで行われるため、
  *   縮みきる前にメニューが開き始めることがある)。
  *
@@ -712,6 +741,7 @@ function init (): void {
   sortDescBtn.addEventListener('click', () => { setSortOrder('desc') })
   initThemeToggle()
   initFab()
+  initFabViewportSync()
 
   updateHeaderHeightVar()
   window.addEventListener('resize', updateHeaderHeightVar)

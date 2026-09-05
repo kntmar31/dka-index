@@ -481,7 +481,10 @@ footer {
 .fab-wrap {
   position: fixed;
   right: 30px;
-  bottom: 60px;
+  // iOS Safariのツールバー表示/非表示アニメーション中に生じる、レイアウトビューポートと
+  // 実際に見えているビューポートのズレを --fab-vv-offset(main.ts側でJSにより設定)で
+  // 補正する。ズレがない通常時は 0px なので、見た目は今まで通り 60px の位置になる。
+  bottom: calc(60px + var(--fab-vv-offset, 0px));
   z-index: 100;
   display: flex;
   flex-direction: column;
