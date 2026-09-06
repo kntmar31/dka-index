@@ -599,7 +599,12 @@ footer {
   pointer-events: auto; // .fab-wrap の pointer-events: none を打ち消し、実際に見えるボタンだけ有効化する
   // iOS標準の長押しコールアウト(画像保存メニューなど)を抑止し、自前の長押し判定と競合しないようにする
   -webkit-touch-callout: none;
-  touch-action: none;
+  // none だと、この要素上でのあらゆるタッチジェスチャーが無効化される。上方向への
+  // 勢いのあるスクロール(オーバースクロール/バウンス)中に指がこの要素にかかると、
+  // ブラウザがジェスチャー判定とポインタイベント発火とで競合し、pointerdown/pointerup が
+  // キャンセルされてタップが効かなくなることがある。manipulation ならダブルタップズームなど
+  // 標準ジェスチャーのみを抑止しつつ、タップ・スクロールは通常通り扱われる。
+  touch-action: manipulation;
   transition: width 0.15s ease, height 0.15s ease, font-size 0.15s ease;
 
   // メニューが開いている間は少し小さくなり、閉じるボタンとしての見た目になる
