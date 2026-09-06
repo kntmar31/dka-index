@@ -568,6 +568,11 @@ function updateHeaderHeightVar (): void {
  * window.visualViewport から実際に見えている範囲を取得し、レイアウトビューポートとの
  * 差分を CSS カスタムプロパティ(--fab-vv-offset)に反映することで、FABの位置を
  * 実際に見えているビューポートに追従させ、タップ判定のズレを避ける。
+ *
+ * 上方向へのオーバースクロール(バウンス)中は vv.offsetTop が一時的に負の値になったり、
+ * 計算結果が異常に大きくなったりすることがあるため、offsetTop を0以上にクランプし、
+ * 最終的な補正値も 0〜100px の範囲に収めることで、異常値がそのままFABの位置に
+ * 反映されてしまうのを防ぐ。
  */
 function initFabViewportSync (): void {
   const visualViewportEl = window.visualViewport
@@ -578,8 +583,10 @@ function initFabViewportSync (): void {
   const vv: VisualViewport = visualViewportEl
 
   function sync (): void {
-    const offset = window.innerHeight - (vv.height + vv.offsetTop)
-    document.documentElement.style.setProperty('--fab-vv-offset', String(Math.max(offset, 0)) + 'px')
+    const currentOffsetTop = Math.max(0, vv.offsetTop)
+    const offset = window.innerHeight - (vv.height + currentOffsetTop)
+    const safeOffset = Math.max(0, Math.min(offset, 100))
+    document.documentElement.style.setProperty('--fab-vv-offset', String(safeOffset) + 'px')
   }
 
   vv.addEventListener('resize', sync)
@@ -705,7 +712,9 @@ function initFab (): void {
 
   fabMain.addEventListener('pointerdown', handlePointerDown)
   fabMain.addEventListener('pointerup', handlePointerUp)
-  fabMain.addEventListener('pointerleave', handlePointerCancel)
+  // pointerleave はスマホでのタップ時、指のわずかなズレでも発火しやすく、
+  // 意図せず長押し判定・縮みアニメーションがキャンセルされる原因になりうるため、
+  // pointercancel(ブラウザが本当にジェスチャーを中断したと判断した場合)のみを見る。
   fabMain.addEventListener('pointercancel', handlePointerCancel)
   fabMain.addEventListener('contextmenu', (e) => { e.preventDefault() })
 
