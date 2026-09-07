@@ -602,18 +602,13 @@ function initFabViewportSync (): void {
  * 占有し続け、その見えない領域が下にある話数リンクへのタップを奪ってしまう
  * 不具合があったため、親要素ごと廃止した)。
  *
- * 操作方法:
- * - PC(マウス): クリックした瞬間に開閉をトグルする(長押し判定はしない)
- * - スマートフォン(タッチ): タップで開閉をトグル、長押し(200ms)すると
- *   振動フィードバックとともに開く。開閉ボタン自体は押している間、
- *   ゆっくり縮む「チャージ」のような視覚フィードバックを見せる
- *   (メニューが実際に開く判定はそれより早いタイミングで行われるため、
- *   縮みきる前にメニューが開き始めることがある)。
+ * 操作方法はPC・スマートフォンともに統一し、開閉ボタンをクリック(タップ)すると
+ * サブメニューが開閉する。長押しでの表示は行わない
+ * (以前実装していたが、スマートフォンでの反応不良が解消しきれなかったため撤去した)。
  *
  * メニューが開いている間は、開閉ボタン自体が少し縮んで「閉じる(✕)」アイコンに変わる。
  */
 function initFab (): void {
-  const LONG_PRESS_TRIGGER_MS = 200
   const CLOSE_ICON = '\u2715' // ✕
   const OPEN_ICON = '\u22EE' // ⋮
 
@@ -626,12 +621,9 @@ function initFab (): void {
   const fabMain: HTMLElement = fabMainEl
   const fabMenu: HTMLElement = fabMenuEl
 
-  let pressTimer: number | null = null
-  let longPressTriggered = false
-
   /**
    * メニューの開閉状態に合わせて、開閉ボタンの見た目(サイズ・アイコン)と
-   * メニュー自体の aria-hidden 属性を同期する。長押し・タップどちらで開いても同じ見た目にする。
+   * メニュー自体の aria-hidden 属性を同期する。
    */
   function syncFabMainVisual (): void {
     const isOpen = fabMenu.classList.contains('is-open')
@@ -647,7 +639,6 @@ function initFab (): void {
 
   function closeMenu (): void {
     fabMenu.classList.remove('is-open')
-    fabMain.classList.remove('is-pressing')
     syncFabMainVisual()
   }
 
@@ -673,56 +664,7 @@ function initFab (): void {
     setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
   }
 
-  function handlePointerDown (e: PointerEvent): void {
-    // PC(マウス)では長押し判定を行わない。クリック(pointerup)で即座にトグルする。
-    if (e.pointerType === 'mouse') return
-
-    longPressTriggered = false
-    // 縮むアニメーション自体はここで開始(CSS側のtransitionでゆっくり進む)。
-    fabMain.classList.add('is-pressing')
-    // メニューを実際に開く判定は、アニメーションの完了を待たず少し早めに行う。
-    pressTimer = window.setTimeout(() => {
-      longPressTriggered = true
-      openMenu() // is-pressing は残したまま(縮みアニメーションはそのまま続行させる)
-      if (window.navigator.vibrate !== undefined) window.navigator.vibrate(15)
-    }, LONG_PRESS_TRIGGER_MS)
-  }
-
-  function handlePointerUp (e: PointerEvent): void {
-    // PC(マウス)ではここで即座にトグルする(長押し判定を経由しない)。
-    if (e.pointerType === 'mouse') {
-      toggleMenu()
-      return
-    }
-
-    fabMain.classList.remove('is-pressing')
-    if (pressTimer !== null) {
-      window.clearTimeout(pressTimer)
-      pressTimer = null
-    }
-    if (!longPressTriggered) {
-      // 長押しでなければ、通常のタップとして開閉をトグルする
-      toggleMenu()
-    }
-  }
-
-  function handlePointerCancel (e: PointerEvent): void {
-    if (e.pointerType === 'mouse') return
-
-    fabMain.classList.remove('is-pressing')
-    if (pressTimer !== null) {
-      window.clearTimeout(pressTimer)
-      pressTimer = null
-    }
-  }
-
-  fabMain.addEventListener('pointerdown', handlePointerDown)
-  fabMain.addEventListener('pointerup', handlePointerUp)
-  // pointerleave はスマホでのタップ時、指のわずかなズレでも発火しやすく、
-  // 意図せず長押し判定・縮みアニメーションがキャンセルされる原因になりうるため、
-  // pointercancel(ブラウザが本当にジェスチャーを中断したと判断した場合)のみを見る。
-  fabMain.addEventListener('pointercancel', handlePointerCancel)
-  fabMain.addEventListener('contextmenu', (e) => { e.preventDefault() })
+  fabMain.addEventListener('click', toggleMenu)
 
   document.querySelectorAll('.fab-item').forEach((item) => {
     item.addEventListener('click', () => {
