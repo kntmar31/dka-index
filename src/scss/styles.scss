@@ -594,3 +594,54 @@ footer {
     font-size: 18px;
   }
 }
+
+// ページの読み込みが完了し、話数一覧が表示されるまでは開閉ボタン・サブメニューを
+// 非表示にする(main.ts側で読み込み成功時に <body> へ is-ready クラスを付与する)。
+// body.is-ready との2要素分の詳細度により、上の .fab-main / .fab-menu の
+// 各ルールより優先される。
+body:not(.is-ready) .fab-main,
+body:not(.is-ready) .fab-menu {
+  display: none;
+}
+
+// -------------------------------------------------------------
+// 「最新話が更新されました」通知
+// 一覧の中に組み込むのではなく、画面下部に固定して浮かせる(トースト風)。
+// 読み込み中・エラー時のカード(state-card)の配色・枠線・角丸・影を踏襲する。
+// -------------------------------------------------------------
+.update-notice {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 90; // FAB(z-index: 100)より下にしておく
+  display: flex;
+  justify-content: center;
+  padding: 16px 20px calc(16px + env(safe-area-inset-bottom, 0px));
+  pointer-events: none; // 背景部分はタップを透過させ、カード自体だけ操作できるようにする
+}
+
+.update-notice-card {
+  background: $color-card-bg;
+  border: 1px solid $color-border;
+  border-radius: 10px;
+  padding: 12px 40px;
+  box-shadow: 0 4px 16px rgba(42, 38, 32, 0.15);
+  pointer-events: auto;
+  // 登場前(&登場中)の初期状態: 透明・少し下の位置。
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+
+  // 登場: フェード+スライドインで現れる。
+  &.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  // 退場: その場でフェードアウトするだけ(位置は動かさない)。
+  &.is-leaving {
+    opacity: 0;
+    transform: translateY(0);
+  }
+}
