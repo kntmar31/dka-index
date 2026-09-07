@@ -474,14 +474,13 @@ footer {
 
 // -------------------------------------------------------------
 // FAB(フローティングアクションボタン)
-// - PC(マウス): クリックで即座にサブメニューの開閉をトグルする
-// - スマートフォン(タッチ): タップでトグル、長押しすると振動フィードバックと
-//   ともに開く(押している間、少しずつ縮む「チャージ」のような視覚効果)
+// PC・スマートフォンともに操作方法を統一: 開閉ボタンをクリック(タップ)すると
+// サブメニューが開閉する(長押しでの表示は行わない)。
 //
 // .fab-menu と .fab-main は共通の親要素(.fab-wrap)を持たない独立した兄弟要素にしている。
-// 以前は親要素でまとめていたが、.fab-menu が閉じている間も visibility: hidden の
-// ままレイアウト上のスペースを占有し続け、その見えない領域が下にある話数リンクへの
-// タップを奪ってしまう不具合があったため、親要素ごと廃止した。
+// 以前は親要素でまとめていたが、.fab-menu が閉じている間もレイアウト上のスペースを
+// 占有し続け、その見えない領域が下にある話数リンクへのタップを奪ってしまう
+// 不具合があったため、親要素ごと廃止した。
 // -------------------------------------------------------------
 .fab-menu {
   position: fixed;
@@ -491,17 +490,26 @@ footer {
   // 位置関係(126px = ボタンの下端60px + ボタン本体56px + 隙間10px)を保つ。
   bottom: calc(126px + var(--fab-vv-offset, 0px));
   z-index: 100;
-  // 閉じている間は display: none にし、レイアウト上のスペースを一切占有しないようにする
-  // (visibility: hidden だとレイアウト上のスペースが残り続け、その見えない領域が
-  // 下にある話数リンクへのタップを奪ってしまう不具合があったため)。
-  // その代わり、開閉時のフェード/スライドアニメーションはなくなり瞬時に切り替わる。
-  display: none;
+  display: flex;
   flex-direction: column;
   align-items: flex-end;
   gap: 10px;
+  opacity: 0;
+  visibility: hidden;
+  // 閉じている間はタップを一切受け付けないようにする(display: none ではなく
+  // visibility: hidden にしているのは、開閉時のフェード/スライドアニメーションを
+  // 見せるため。.fab-menu自体は独立した要素で、閉じていても自身の56px×αの
+  // 領域のみを占有するだけなので、以前の .fab-wrap のような広い範囲の
+  // タップを奪う問題は起きない)。
+  pointer-events: none;
+  transform: translateY(8px);
+  transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s;
 
   &.is-open {
-    display: flex;
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateY(0);
   }
 }
 
@@ -572,38 +580,17 @@ footer {
   cursor: pointer;
   -webkit-user-select: none;
   user-select: none;
-  // iOS標準の長押しコールアウト(画像保存メニューなど)を抑止し、自前の長押し判定と競合しないようにする
+  // iOS標準の長押しコールアウト(画像保存メニューなど)を抑止する
   -webkit-touch-callout: none;
-  // none だと、この要素上でのあらゆるタッチジェスチャーが無効化される。上方向への
-  // 勢いのあるスクロール(オーバースクロール/バウンス)中に指がこの要素にかかると、
-  // ブラウザがジェスチャー判定とポインタイベント発火とで競合し、pointerdown/pointerup が
-  // キャンセルされてタップが効かなくなることがある。manipulation ならダブルタップズームなど
-  // 標準ジェスチャーのみを抑止しつつ、タップ・スクロールは通常通り扱われる。
+  // ダブルタップズームなど標準ジェスチャーのみを抑止し、タップは通常通り扱われるようにする
   touch-action: manipulation;
   transition: width 0.15s ease, height 0.15s ease, font-size 0.15s ease;
 
   // メニューが開いている間は少し小さくなり、閉じるボタンとしての見た目になる
-  // (open/closeの状態そのものに連動させる。長押し・タップどちらで開いても同じ見た目にする)。
-  // transitionを明示しておくことで、is-pressingが付いていない(=タップだけで開いた)場合でも
-  // 常に一定の速さ(0.15s)で切り替わるようにする。
+  // (open/closeの状態そのものに連動させる)。
   &.is-open {
     width: 46px;
     height: 46px;
     font-size: 18px;
-    transition: width 0.15s ease, height 0.15s ease, font-size 0.15s ease;
-  }
-
-  // 押している間、ゆっくり縮んでいく「チャージ」のような視覚フィードバック
-  // (スマートフォンでの長押し時のみ発生。PCではマウスクリックで即座にトグルするため付与されない)。
-  // メニューが実際に開く判定(main.ts側)はこれより短い時間で行われるため、
-  // 縮みきる前にメニューが開き始めることがある(意図した挙動)。
-  // is-open と同じ詳細度(クラス2つ)だが、CSSでは同じ詳細度の場合ソースで後にある
-  // ルールが勝つため、is-pressingをis-openより後ろに書くことで、長押し中
-  // (両方のクラスが同時に付いている間)は常にこちら(0.15s)が優先されるようにしている。
-  &.is-pressing {
-    width: 46px;
-    height: 46px;
-    font-size: 18px;
-    transition: width 0.15s linear, height 0.15s linear, font-size 0.15s linear;
   }
 }
