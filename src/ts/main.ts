@@ -3,7 +3,7 @@
  *
  * 「堀さんと宮村くん 全話リスト」アプリのメインロジック。
  * - Google Apps Script API からのデータ取得(読み込み中/エラー状態の表示を含む)
- * - 既読管理・最後に読んだ話数・並び順の記憶(localStorage、単一キーにまとめて保存)
+ * - 既読管理・最後に読んだ話数・並び順・話数カウントの記憶(localStorage、単一キーにまとめて保存)
  * - 検索・並び替え
  * - 右下のFAB(フローティングアクションボタン)によるクイックメニュー
  * を担う。
@@ -32,15 +32,16 @@ type Theme = 'amber' | 'lime'
 
 /**
  * localStorage に保存する状態のかたち。
- * 既読話数・最後に読んだ話数・並び順・カラーテーマを1つのキーにまとめて保存する
- * (localStorageのキーを増やしすぎないため)。
+ * 既読話数・最後に読んだ話数・並び順・カラーテーマ・前回取得時の話数を
+ * 1つのキーにまとめて保存する(localStorageのキーを増やしすぎないため)。
  *
  * 保存例:
  * {
  *   "readNums": [1, 2, 3, 42, 43, 44, 45, 46, 47],
  *   "lastReadNum": 47,
  *   "sortOrder": "desc",
- *   "theme": "amber"
+ *   "theme": "amber",
+ *   "lastKnownCount": 613
  * }
  */
 interface StoredState {
@@ -52,6 +53,8 @@ interface StoredState {
   sortOrder: SortOrder
   /** カラーテーマ */
   theme: Theme
+  /** 前回API取得時点での話数(count)。未取得の場合は null */
+  lastKnownCount: number | null
 }
 
 /** アプリの状態をまとめて保存する localStorage のキー。 */
@@ -71,7 +74,13 @@ const GAS_API_URL = '__GAS_API_URL__'
  * @returns 読み込んだ(または既定の)状態
  */
 function loadStoredState (): StoredState {
-  const fallback: StoredState = { readNums: [], lastReadNum: null, sortOrder: 'desc', theme: 'amber' }
+  const fallback: StoredState = {
+    readNums: [],
+    lastReadNum: null,
+    sortOrder: 'desc',
+    theme: 'amber',
+    lastKnownCount: null
+  }
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (raw === null) return fallback
@@ -86,15 +95,16 @@ function loadStoredState (): StoredState {
     const lastReadNum = typeof obj.lastReadNum === 'number' ? obj.lastReadNum : null
     const sortOrder: SortOrder = obj.sortOrder === 'asc' ? 'asc' : 'desc'
     const theme: Theme = obj.theme === 'lime' ? 'lime' : 'amber'
+    const lastKnownCount = typeof obj.lastKnownCount === 'number' ? obj.lastKnownCount : null
 
-    return { readNums, lastReadNum, sortOrder, theme }
+    return { readNums, lastReadNum, sortOrder, theme, lastKnownCount }
   } catch {
     return fallback
   }
 }
 
 /**
- * 現在のアプリ状態(既読集合・最後に読んだ話数・並び順)を
+ * 現在のアプリ状態(既読集合・最後に読んだ話数・並び順・話数カウントなど)を
  * 1つの localStorage キーにまとめて保存する。
  * プライベートブラウジングなどで保存に失敗しても黙って諦める(UIを壊さない)。
  */
@@ -104,7 +114,8 @@ function persistState (): void {
       readNums: Array.from(readSet),
       lastReadNum,
       sortOrder,
-      theme: currentTheme
+      theme: currentTheme,
+      lastKnownCount
     }
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
   } catch {
@@ -129,6 +140,9 @@ let sortOrder: SortOrder = initialState.sortOrder
 
 /** 現在のカラーテーマ(起動時に localStorage から読み込む)。 */
 let currentTheme: Theme = initialState.theme
+
+/** 前回API取得時点での話数。今回の取得結果と比較し、増えていれば更新通知を出す。 */
+let lastKnownCount: number | null = initialState.lastKnownCount
 
 /** 画面の状態。起動直後は読み込み中。 */
 let loadState: LoadState = 'loading'
@@ -353,6 +367,48 @@ function renderError (): void {
 }
 
 /**
+ * 「最新話が更新されました」の通知を画面下部に固定表示する。
+ * 一覧の中に組み込むのではなく、ウインドウ下部に浮かせる形にする
+ * (読み込み中・エラー時のカード(state-card)と同じ配色・枠線・角丸・影を踏襲する)。
+ *
+ * 登場時は少し下の位置から、透明な状態からフェード+スライドインで現れる。
+ * 5秒経過すると、その場でフェードアウトして消える(スライドはしない)。
+ */
+function showUpdateNotice (): void {
+  const NOTICE_DURATION_MS = 5000
+  const NOTICE_TRANSITION_MS = 250
+
+  const notice = document.createElement('div')
+  notice.className = 'update-notice'
+  notice.innerHTML =
+    '<div class="update-notice-card">' +
+    '<p class="state-text">最新話が更新されました</p>' +
+    '</div>'
+  document.body.appendChild(notice)
+
+  const card = notice.querySelector('.update-notice-card')
+  if (card === null) return
+
+  // 生成直後は非表示の状態(透明・少し下の位置)のままにしておき、
+  // 次の描画フレームで is-visible を付けることで、フェード+スライドインの
+  // トランジションを確実に発生させる(スタイル適用と同じフレームで
+  // クラスを付けると、ブラウザによってはアニメーションされないことがあるため)。
+  window.requestAnimationFrame(() => {
+    window.requestAnimationFrame(() => {
+      card.classList.add('is-visible')
+    })
+  })
+
+  window.setTimeout(() => {
+    card.classList.remove('is-visible')
+    card.classList.add('is-leaving') // その場でフェードアウトさせる(位置は動かさない)
+    window.setTimeout(() => {
+      notice.remove()
+    }, NOTICE_TRANSITION_MS)
+  }, NOTICE_DURATION_MS)
+}
+
+/**
  * 検索文字列に応じて一覧を絞り込み、20話ごとのグループ・並び順を適用して描画する。
  * 検索中はグループ分けを行わず、単一のフラットなリストとして表示する。
  *
@@ -448,8 +504,19 @@ function scrollToNextUnread (): void {
 }
 
 /**
+ * FAB(開閉ボタン・サブメニュー)を表示する。
+ * ページの読み込みが完了し、話数一覧が表示されたあとにのみ呼び出す
+ * (読み込み中・エラー中は body に is-ready クラスが付かず、CSS側で非表示のまま)。
+ */
+function showFab (): void {
+  document.body.classList.add('is-ready')
+}
+
+/**
  * Google Apps Script API から話数リストを取得する。
  * 成功すれば DATA にセットして一覧を表示し、失敗すればエラー状態を表示する。
+ * あわせて、前回取得時より話数(count)が増えていないかを確認し、
+ * 増えていれば画面下部に更新通知を表示する。
  */
 async function loadLiveData (): Promise<void> {
   try {
@@ -489,22 +556,28 @@ async function loadLiveData (): Promise<void> {
     DATA = episodes
     loadState = 'ready'
 
+    // 前回取得時の話数と比較し、増えていれば画面下部に更新通知を表示する。
+    // (初回訪問など、前回値が無い場合は通知しない。今回の値を新たな基準として保存する。)
+    if (lastKnownCount !== null && data.count > lastKnownCount) {
+      showUpdateNotice()
+    }
+    lastKnownCount = data.count
+
     // 既読情報を新しい話数リストに合わせて整合させる。
-    // 存在しない番号が既読セットに残っていれば取り除いて保存し直す。
+    // 存在しない番号が既読セットに残っていれば取り除く。
     const validNums = new Set(episodes.map((ep) => ep.num))
-    let readSetChanged = false
     readSet.forEach((n) => {
       if (!validNums.has(n)) {
         readSet.delete(n)
-        readSetChanged = true
       }
     })
-    if (readSetChanged) {
-      persistState()
-    }
+
+    // 既読情報のクリーンアップ・話数カウントの更新をまとめて保存する。
+    persistState()
 
     render(searchEl.value)
     scrollToNextUnread()
+    showFab()
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
     loadState = 'error'
@@ -605,6 +678,9 @@ function initFabViewportSync (): void {
  * 操作方法はPC・スマートフォンともに統一し、開閉ボタンをクリック(タップ)すると
  * サブメニューが開閉する。長押しでの表示は行わない
  * (以前実装していたが、スマートフォンでの反応不良が解消しきれなかったため撤去した)。
+ *
+ * ページの読み込みが完了し話数一覧が表示されるまでは、CSS側(body:not(.is-ready))で
+ * 非表示にしている。イベントリスナー自体は先に登録しておき、表示だけを後から出す。
  *
  * メニューが開いている間は、開閉ボタン自体が少し縮んで「閉じる(✕)」アイコンに変わる。
  */
