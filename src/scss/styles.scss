@@ -491,24 +491,17 @@ footer {
   // 位置関係(126px = ボタンの下端60px + ボタン本体56px + 隙間10px)を保つ。
   bottom: calc(126px + var(--fab-vv-offset, 0px));
   z-index: 100;
-  display: flex;
+  // 閉じている間は display: none にし、レイアウト上のスペースを一切占有しないようにする
+  // (visibility: hidden だとレイアウト上のスペースが残り続け、その見えない領域が
+  // 下にある話数リンクへのタップを奪ってしまう不具合があったため)。
+  // その代わり、開閉時のフェード/スライドアニメーションはなくなり瞬時に切り替わる。
+  display: none;
   flex-direction: column;
   align-items: flex-end;
   gap: 10px;
-  opacity: 0;
-  visibility: hidden;
-  // 閉じている間はタップを一切受け付けないようにする(レイアウト上のスペースは
-  // position: fixed のため他要素の配置に影響しないが、見えない状態でクリックを
-  // 奪わないよう明示的に無効化しておく)。
-  pointer-events: none;
-  transform: translateY(8px);
-  transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s;
 
   &.is-open {
-    opacity: 1;
-    visibility: visible;
-    pointer-events: auto;
-    transform: translateY(0);
+    display: flex;
   }
 }
 
