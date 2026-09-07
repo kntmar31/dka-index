@@ -597,6 +597,11 @@ function initFabViewportSync (): void {
 /**
  * 右下のFAB(フローティングアクションボタン)クイックメニューを初期化する。
  *
+ * .fab-menu と .fab-main は共通の親要素を持たない独立した要素として扱う
+ * (以前は .fab-wrap でまとめていたが、閉じている間もレイアウト上のスペースを
+ * 占有し続け、その見えない領域が下にある話数リンクへのタップを奪ってしまう
+ * 不具合があったため、親要素ごと廃止した)。
+ *
  * 操作方法:
  * - PC(マウス): クリックした瞬間に開閉をトグルする(長押し判定はしない)
  * - スマートフォン(タッチ): タップで開閉をトグル、長押し(200ms)すると
@@ -625,13 +630,14 @@ function initFab (): void {
   let longPressTriggered = false
 
   /**
-   * メニューの開閉状態に合わせて、開閉ボタンの見た目(サイズ・アイコン)を同期する。
-   * 長押し・タップどちらで開いても同じ見た目にする。
+   * メニューの開閉状態に合わせて、開閉ボタンの見た目(サイズ・アイコン)と
+   * メニュー自体の aria-hidden 属性を同期する。長押し・タップどちらで開いても同じ見た目にする。
    */
   function syncFabMainVisual (): void {
     const isOpen = fabMenu.classList.contains('is-open')
     fabMain.classList.toggle('is-open', isOpen)
     fabMain.textContent = isOpen ? CLOSE_ICON : OPEN_ICON
+    fabMenu.setAttribute('aria-hidden', String(!isOpen))
   }
 
   function openMenu (): void {
@@ -731,7 +737,8 @@ function initFab (): void {
 
   document.addEventListener('click', (e) => {
     const target = e.target
-    if (target instanceof Element && target.closest('.fab-wrap') === null) {
+    // .fab-menu と #fabMain は独立した要素のため、両方を対象にチェックする。
+    if (target instanceof Element && target.closest('.fab-menu, #fabMain') === null) {
       closeMenu()
     }
   })
