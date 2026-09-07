@@ -477,46 +477,31 @@ footer {
 // - PC(マウス): クリックで即座にサブメニューの開閉をトグルする
 // - スマートフォン(タッチ): タップでトグル、長押しすると振動フィードバックと
 //   ともに開く(押している間、少しずつ縮む「チャージ」のような視覚効果)
+//
+// .fab-menu と .fab-main は共通の親要素(.fab-wrap)を持たない独立した兄弟要素にしている。
+// 以前は親要素でまとめていたが、.fab-menu が閉じている間も visibility: hidden の
+// ままレイアウト上のスペースを占有し続け、その見えない領域が下にある話数リンクへの
+// タップを奪ってしまう不具合があったため、親要素ごと廃止した。
 // -------------------------------------------------------------
-.fab-wrap {
+.fab-menu {
   position: fixed;
   right: 30px;
-  // iOS Safariのツールバー表示/非表示アニメーション中に生じる、レイアウトビューポートと
-  // 実際に見えているビューポートのズレを --fab-vv-offset(main.ts側でJSにより設定)で
-  // 補正する。ズレがない通常時は 0px なので、見た目は今まで通り 60px の位置になる。
-  bottom: calc(60px + var(--fab-vv-offset, 0px));
+  // main.ts側でiOS Safariのツールバー表示/非表示によるビューポートのズレを
+  // --fab-vv-offset に反映しており、ここでも同じ値を使ってメインボタンとの
+  // 位置関係(126px = ボタンの下端60px + ボタン本体56px + 隙間10px)を保つ。
+  bottom: calc(126px + var(--fab-vv-offset, 0px));
   z-index: 100;
-  display: flex;
+  // 閉じている間は display: none にし、レイアウト上のスペースを一切占有しないようにする
+  // (visibility: hidden だとレイアウト上のスペースが残り続け、その見えない領域が
+  // 下にある話数リンクへのタップを奪ってしまう不具合があったため)。
+  // その代わり、開閉時のフェード/スライドアニメーションはなくなり瞬時に切り替わる。
+  display: none;
   flex-direction: column;
   align-items: flex-end;
   gap: 10px;
-  // iOS Safariでは、position: fixed の要素がスクロール(特に慣性スクロール)直後に
-  // ヒットテスト(タップ位置の判定)が一瞬古いままになり、タップが反応しないことがある。
-  // GPUの合成レイヤーに昇格させておくことで、スクロール中も正しく追従・判定されるようにする。
-  transform: translateZ(0);
-  // .fab-menu は閉じている間 visibility: hidden にしているが、これはレイアウト上の
-  // スペースを占有したままになる(4つのボタン+ラベル+隙間ぶんの高さが確保され続ける)。
-  // この要素(.fab-wrap)自体はデフォルトで pointer-events: auto のため、
-  // その見えない領域が下にある話数リンクへのタップを奪ってしまっていた。
-  // ここを none にして透過させ、実際に見えているボタンだけ pointer-events: auto で
-  // 個別に有効化する。
-  pointer-events: none;
-}
-
-.fab-menu {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 10px;
-  opacity: 0;
-  visibility: hidden;
-  transform: translateY(8px);
-  transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s;
 
   &.is-open {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0);
+    display: flex;
   }
 }
 
@@ -537,18 +522,6 @@ footer {
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
 
-// fab-main とサブメニューの丸ボタンの中心を縦軸で揃えるため、
-// どちらも同じ56px幅のスロットの中で中央寄せする
-// (fab-mainは開閉時にサイズが変わるため、スロットで幅を固定しないと
-// align-items: flex-end の右揃えの影響で中心がズレてしまう)。
-.fab-item-slot,
-.fab-main-slot {
-  width: 56px;
-  flex: none;
-  display: flex;
-  justify-content: center;
-}
-
 .fab-item {
   width: 56px;
   height: 56px;
@@ -563,7 +536,6 @@ footer {
   justify-content: center;
   cursor: pointer;
   flex: none;
-  pointer-events: auto; // .fab-wrap の pointer-events: none を打ち消し、実際に見えるボタンだけ有効化する
 
   &:active {
     transform: scale(0.94);
@@ -582,6 +554,10 @@ footer {
 }
 
 .fab-main {
+  position: fixed;
+  right: 30px;
+  bottom: calc(60px + var(--fab-vv-offset, 0px));
+  z-index: 100;
   width: 56px;
   height: 56px;
   border-radius: 50%;
@@ -596,7 +572,6 @@ footer {
   cursor: pointer;
   -webkit-user-select: none;
   user-select: none;
-  pointer-events: auto; // .fab-wrap の pointer-events: none を打ち消し、実際に見えるボタンだけ有効化する
   // iOS標準の長押しコールアウト(画像保存メニューなど)を抑止し、自前の長押し判定と競合しないようにする
   -webkit-touch-callout: none;
   // none だと、この要素上でのあらゆるタッチジェスチャーが無効化される。上方向への
