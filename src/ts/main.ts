@@ -216,16 +216,13 @@ function scrollToEpisode (num: number, behavior: ScrollBehavior): void {
 
 /**
  * 並び順を切り替えたあとのスクロール位置を調整する。
- * 「最後に読んだ話数」(lastReadNum)の行が画面の真ん中に来るようスクロールする。
- * lastReadNum が null の場合(まだ何も読んでいない場合)は画面の一番上に戻す。
+ * アクションバーの「次の話し」ボタンと全く同じロジック(scrollToNextUnreadEpisode)を
+ * 使い、次に読むべき話数が画面の真ん中に来るようスクロールする。
+ * (以前は「最後に読んだ話数」の位置に戻していたが、「次の話し」ボタンと
+ * 挙動を完全に一致させるため、こちらに統一した。)
  */
 function restoreScrollAfterSort (): void {
-  if (lastReadNum === null) {
-    window.scrollTo(0, 0)
-    return
-  }
-
-  scrollToEpisode(lastReadNum, 'auto')
+  scrollToNextUnreadEpisode('smooth')
 }
 
 /**
@@ -242,7 +239,7 @@ function updateSortActionLabel (): void {
 
 /**
  * 並び順を切り替え、保存し、アクションバーのラベルを更新したうえで再描画する。
- * 再描画後、スクロール位置を「最後に読んだ話数」に合わせ直す。
+ * 再描画後、スクロール位置を次に読むべき話数に合わせ直す(「次の話し」ボタンと同じ位置)。
  *
  * @param order 新しい並び順
  */
@@ -475,21 +472,42 @@ function getNextUnreadNum (): number | null {
 }
 
 /**
- * 「次に読むべき話数」の行までスムーズにスクロールする。
- * 起動後1度だけ実行する(検索・並び替えのたびには行わない)。
+ * 「次に読むべき話数」の行までスクロールする(画面の真ん中に来るようにする)。
  * 次の話数が決まらない場合(lastReadNum が未設定、つまり一度も話を開いていない場合)は
  * 画面の一番上にスクロールする。
+ * アクションバーの「次の話し」ボタン・初期表示時の自動スクロール・並び替え後の
+ * スクロール位置復元の3箇所すべてで、これを共通の実装として使う
+ * (挙動を完全に一致させるため)。
+ *
+ * @param behavior スクロールの挙動('auto' = 瞬時、'smooth' = アニメーション)
+ */
+function scrollToNextUnreadEpisode (behavior: ScrollBehavior): void {
+  const nextNum = getNextUnreadNum()
+  if (nextNum === null) {
+    window.scrollTo({ top: 0, behavior })
+    return
+  }
+  scrollToEpisode(nextNum, behavior)
+}
+
+/**
+ * 「次に読むべき話数」の行までスムーズにスクロールする。
+ * 起動後1度だけ実行する(検索・並び替えのたびには行わない)。
+ *
+ * 独自フォント(Shippori Mincho / Zen Kaku Gothic New)の読み込みが完了する前に
+ * スクロールすると、フォールバックフォントで計算した位置に一旦スクロールしたあと
+ * フォント切り替えで行の高さがわずかに変わり、「次の話し」ボタンを押した時
+ * (フォント読み込み済みの状態)と微妙に結果がズレることがある。
+ * document.fonts.ready を待ってからヘッダー高さを再計算し、スクロールする。
  */
 function scrollToNextUnread (): void {
   if (hasScrolledToLastRead) return
   hasScrolledToLastRead = true
 
-  const nextNum = getNextUnreadNum()
-  if (nextNum === null) {
-    window.scrollTo(0, 0)
-    return
-  }
-  scrollToEpisode(nextNum, 'smooth')
+  void document.fonts.ready.then(() => {
+    updateHeaderHeightVar()
+    scrollToNextUnreadEpisode('smooth')
+  })
 }
 
 /**
@@ -652,9 +670,7 @@ function initActionBar (): void {
   }
 
   function actionBarScrollToNextUnread (): void {
-    const nextNum = getNextUnreadNum()
-    if (nextNum === null) return
-    scrollToEpisode(nextNum, 'smooth')
+    scrollToNextUnreadEpisode('smooth')
   }
 
   function actionBarToggleSort (): void {
