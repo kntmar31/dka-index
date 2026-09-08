@@ -5,7 +5,7 @@
  * - Google Apps Script API からのデータ取得(読み込み中/エラー状態の表示を含む)
  * - 既読管理・最後に読んだ話数・並び順・話数カウントの記憶(localStorage、単一キーにまとめて保存)
  * - 検索・並び替え(画面下部のアクションバーから操作する)
- * - 画面下部に常時表示するクイックアクションバー(テーマ/並び替え/次の未読話/一番上へ/
+ * - 画面下部に常時表示するクイックアクションバー(並び替え/次の未読話/一番上へ/
  *   一番下へ/検索)
  * を担う。
  */
@@ -477,14 +477,18 @@ function getNextUnreadNum (): number | null {
 /**
  * 「次に読むべき話数」の行までスムーズにスクロールする。
  * 起動後1度だけ実行する(検索・並び替えのたびには行わない)。
- * 次の話数がリストに存在しない場合(読み進めた末端に達している場合など)は何もしない。
+ * 次の話数が決まらない場合(lastReadNum が未設定、つまり一度も話を開いていない場合)は
+ * 画面の一番上にスクロールする。
  */
 function scrollToNextUnread (): void {
   if (hasScrolledToLastRead) return
   hasScrolledToLastRead = true
 
   const nextNum = getNextUnreadNum()
-  if (nextNum === null) return
+  if (nextNum === null) {
+    window.scrollTo(0, 0)
+    return
+  }
   scrollToEpisode(nextNum, 'smooth')
 }
 
@@ -596,7 +600,7 @@ function applyTheme (theme: Theme): void {
 
 /**
  * カラーテーマを切り替え、反映・保存する。
- * アクションバーのテーマ切替ボタンから呼び出される。
+ * ヘッダーのテーマ切替ボタン(.theme-toggle)から呼び出される。
  */
 function toggleTheme (): void {
   currentTheme = currentTheme === 'lime' ? 'amber' : 'lime'
@@ -606,8 +610,7 @@ function toggleTheme (): void {
 
 /**
  * 起動時に保存済みのテーマを反映し、ヘッダーのテーマ切替ボタン(丸い小さなボタン)に
- * クリックイベントを登録する。テーマの切替はこのボタンとアクションバーの
- * テーマ変更ボタンの両方から行える。
+ * クリックイベントを登録する。テーマの切替はこのボタンからのみ行える。
  */
 function initTheme (): void {
   applyTheme(currentTheme)
@@ -628,9 +631,11 @@ function updateHeaderHeightVar (): void {
 }
 
 /**
- * 画面下部に常時表示するクイックアクションバー(テーマ/並び替え/次の未読話/一番上へ/
+ * 画面下部に常時表示するクイックアクションバー(並び替え/次の未読話/一番上へ/
  * 一番下へ/検索)を初期化する。以前のFAB(開閉ボタン+開閉式サブメニュー)は廃止し、
  * 常に表示された各ボタンを直接タップ/クリックする形に変更した。
+ * テーマ切り替えはヘッダーの丸いボタン(.theme-toggle)のみで行う
+ * (以前はこのアクションバーにもテーマ変更ボタンがあったが撤去した)。
  *
  * 検索ボタンだけは他のボタンと違い、単発の動作ではなく状態を持つ切り替え式にしている。
  * タップすると他のボタンが隠れて検索欄が現れ、ボタン自体も閉じるボタンに変わる。
@@ -662,7 +667,6 @@ function initActionBar (): void {
       if (action === 'top') scrollToTop()
       if (action === 'bottom') scrollToBottom()
       if (action === 'next') actionBarScrollToNextUnread()
-      if (action === 'theme') toggleTheme()
       if (action === 'sort') actionBarToggleSort()
     })
   })
