@@ -31,6 +31,7 @@ $breakpoint-mobile: 600px;
 // <html> に data-theme="lime" を付け外しするだけで一括切り替えできるようにする。
 // --color-bg-next は「切り替え先」の背景色で、テーマ切り替えボタン自体の
 // 色に使う(現在の背景に埋もれないよう、次のテーマの色を示す)。
+// --color-header-bg はヘッダー専用の背景色(各テーマのサブカラー)。
 // -------------------------------------------------------------
 :root {
   --color-bg: #ffc600;
@@ -40,6 +41,7 @@ $breakpoint-mobile: 600px;
   --color-accent-soft: rgba(170, 59, 46, 0.13);
   --color-bg-next: #cfff00; // 切り替え先(limeテーマ)の背景色
   --color-fab-active: var(--color-accent-soft); // アクションバーのボタンを押している間の背景色
+  --color-header-bg: #aa3b2e; // ヘッダー背景色(amberテーマのサブカラー)
 }
 
 html[data-theme='lime'] {
@@ -52,6 +54,7 @@ html[data-theme='lime'] {
   // limeテーマは彩度の高い黄緑背景のため、--color-accent-soft(ピンク寄りの薄色)より
   // 黒みがかった薄いグレーの方が「押した」感が自然に見えるため、専用の値にしている。
   --color-fab-active: rgba(0, 0, 0, 0.1);
+  --color-header-bg: #000000; // ヘッダー背景色(limeテーマのサブカラー)
 }
 
 // -------------------------------------------------------------
@@ -87,18 +90,17 @@ body {
 
 // -------------------------------------------------------------
 // ヘッダー
+// 背景色は各テーマのサブカラー(--color-header-bg)にし、本文とは異なる帯として見せる。
+// 背景が濃い色になるため、文字色はテーマに関わらず白系に統一して読みやすさを保つ。
 // -------------------------------------------------------------
 header {
   flex: none;
   position: sticky;
   top: 0;
   z-index: 20;
-  background-color: var(--color-bg);
-  padding: 28px 20px 14px 20px;
-
-  @media (max-width: $breakpoint-mobile) {
-    padding: 22px 20px 12px 20px;
-  }
+  background-color: var(--color-header-bg);
+  color: #fff;
+  padding: 20px;
 }
 
 // eyebrow(「目次帳 — Index」)とカラーテーマ切り替えボタンを同じ行に並べる。
@@ -112,7 +114,9 @@ header {
 .eyebrow {
   font-size: 12px;
   letter-spacing: 0.24em;
-  color: var(--color-accent);
+  // ヘッダー背景が --color-accent 系の濃い色になったため、
+  // 同系色の --color-accent ではなく、背景と対比する白(半透明)にする。
+  color: rgba(255, 255, 255, 0.85);
   font-weight: 700;
   text-transform: uppercase;
   margin-bottom: 0;
@@ -121,11 +125,12 @@ header {
 // カラーテーマ切り替えボタン。丸ボタン1つでトグルする。
 // 背景色は「切り替え先」のテーマ色(--color-bg-next)にし、
 // 現在の背景に埋もれず「押すとどうなるか」が一目でわかるようにしている。
+// ヘッダー背景が濃色になったため、白い枠線を添えて輪郭をはっきりさせる。
 .theme-toggle {
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  border: none;
+  border: 1px solid rgba(255, 255, 255, 0.6);
   padding: 0;
   cursor: pointer;
   background: var(--color-bg-next);
@@ -138,10 +143,11 @@ h1 {
   margin: 0 0 4px 0;
   line-height: 1.25;
   letter-spacing: 0.02em;
+  color: #fff;
 }
 
 .sub {
-  color: $color-ink-soft;
+  color: rgba(255, 255, 255, 0.75);
   font-size: 13.5px;
   margin: 0;
 }
@@ -391,25 +397,27 @@ footer {
   display: flex;
   justify-content: center;
   padding: 16px 20px calc(16px + env(safe-area-inset-bottom, 0px));
-  // ページの読み込みが完了するまでは透明・少し下の位置にしておき、
-  // is-visible が付いたらフェード+スライドインで現れる。
-  // (「最新話が更新されました」トーストと違い、一度表示されたら自動では消えない。)
   opacity: 0;
   transform: translateY(10px);
   transition: opacity 0.25s ease, transform 0.25s ease;
-  pointer-events: none; // 背景部分はタップを透過させ、カード自体だけ操作できるようにする
+  pointer-events: none;
 
   &.is-visible {
     opacity: 1;
     transform: translateY(0);
+  }
+
+  @media (max-width: $breakpoint-mobile) {
+    padding-left: 10px;
+    padding-right: 10px;
   }
 }
 
 .action-bar-card {
   display: flex;
   align-items: center;
-  justify-content: space-around;
-  gap: 8px;
+  justify-content: space-between;
+  gap: 4px;
   background: $color-card-bg;
   border: 1px solid $color-border;
   border-radius: 10px;
@@ -422,6 +430,9 @@ footer {
 .fab-item {
   width: 56px;
   height: 56px;
+  // 画面が広い(PCなど)場合に flex: 1 だけだと際限なく大きくなってしまうため、
+  // 56pxを上限にする(狭い画面ではこれまで通り縮む)。
+  max-width: 56px;
   border-radius: 50%;
   border: none;
   background: transparent;
@@ -433,15 +444,13 @@ footer {
   gap: 5px;
   padding: 2px;
   cursor: pointer;
-  flex: none;
-  -webkit-tap-highlight-color: transparent; // スマホでタップした際の青いハイライトを消す
-  // 離した時(&:active が外れた瞬間)にこちらの指定が使われ、0.3秒かけてゆっくり消える。
+  flex: 1;
+  -webkit-tap-highlight-color: transparent;
   transition: background 0.3s ease;
 
   &:active {
     background: var(--color-fab-active);
     transform: scale(0.94);
-    // 押した瞬間(&:active が付いた瞬間)はこちらの指定が使われ、遷移なしで瞬時に色が付く。
     transition: background 0s;
   }
 }
@@ -458,7 +467,6 @@ footer {
   color: $color-ink-soft;
 }
 
-// 検索ボタンを押すと、他のボタンが隠れて検索欄が現れる。
 .action-bar-card.is-search-open {
   .fab-item:not([data-action='search']) {
     display: none;
@@ -485,7 +493,6 @@ footer {
     color: #9c9484;
   }
 
-  // 16px未満だとiOS Safariがフォーカス時に自動でズームしてしまうため16px以上にする。
   font-size: 16px;
 }
 
@@ -501,20 +508,25 @@ footer {
   display: block;
 }
 
-// 検索ボタンはアイコン(SVG)とラベルの間隔を他のボタンより少し詰める。
+// 検索ボタンは、通常時は他のボタンと同じ flex: 1 のままにしておく。
+// 検索を開いている間(表示されるのが検索欄とこのボタンの2つだけになる)は、
+// このボタンまで flex: 1 で幅を分け合ってしまうと不自然に横長になるため、
+// その状態の時だけ固定幅にする。
 #actionBarSearchBtn {
   gap: 2px;
 }
 
-// 検索欄を開いている間、検索ボタンは「閉じる」ボタンとして機能する。
-// この時は押しても背景色が変わるアニメーションを出さないようにする。
+.action-bar-card.is-search-open #actionBarSearchBtn {
+  flex: none;
+  width: 56px;
+  height: 56px;
+}
+
 .action-bar-card.is-search-open #actionBarSearchBtn:active {
   background: transparent;
   transition: none;
 }
 
-// 「次の未読話へ」アイコン。絵文字化しやすいUnicode文字(⏭など)は使わず、
-// CSSのボーダートリックで右向き三角形を描く(機種・フォントに依存しないようにするため)。
 .icon-next {
   display: inline-block;
   width: 0;
@@ -524,35 +536,26 @@ footer {
   border-left: 13px solid currentColor;
 }
 
-// -------------------------------------------------------------
-// 「最新話が更新されました」通知
-// main の中身を差し替えず、話数一覧の上に浮かせるオーバーレイにすることで、
-// 通知が出ている間も背後に一覧が見えるようにする。
-// 読み込み中・エラー時のカード(state-card)をそのまま使う。
-// -------------------------------------------------------------
 .update-overlay {
   position: fixed;
   inset: 0;
-  z-index: 95; // アクションバー(z-index: 90)より上、確実に見えるようにする
+  z-index: 95;
   display: flex;
   align-items: center;
   justify-content: center;
-  pointer-events: none; // 背景部分はタップを透過させ、カード自体だけ操作できるようにする
+  pointer-events: none;
 
   .state-card {
     pointer-events: auto;
-    // 登場前(&登場中)の初期状態: 透明・少し下の位置。
     opacity: 0;
     transform: translateY(10px);
     transition: opacity 0.25s ease, transform 0.25s ease;
 
-    // 登場: フェード+スライドインで現れる。
     &.is-visible {
       opacity: 1;
       transform: translateY(0);
     }
 
-    // 退場: その場でフェードアウトするだけ(位置は動かさない)。
     &.is-leaving {
       opacity: 0;
       transform: translateY(0);
@@ -560,8 +563,6 @@ footer {
   }
 }
 
-// 「最新話が更新されました」通知に添える小さなバッジ。
-// state-cardの淡々とした見た目に、アクセントカラーで少し目を引く要素を加える。
 .update-badge {
   background: var(--color-accent-bg);
   color: #fff;
