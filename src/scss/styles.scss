@@ -100,7 +100,8 @@ header {
   z-index: 20;
   background-color: var(--color-header-bg);
   color: #fff;
-  padding: 20px;
+  // .sub(サブタイトル)はheaderの外に出しているため、下側の余白は.subが持つ。
+  padding: 20px 20px 8px 20px;
 }
 
 // eyebrow(「目次帳 — Index」)とカラーテーマ切り替えボタンを同じ行に並べる。
@@ -140,16 +141,21 @@ h1 {
   font-family: $font-serif;
   font-weight: 800;
   font-size: clamp(26px, 4vw, 38px);
-  margin: 0 0 4px 0;
+  margin: 0;
   line-height: 1.25;
   letter-spacing: 0.02em;
   color: #fff;
 }
 
+// header(sticky)の外に出しているため、見た目が継続して見えるよう
+// 背景色をheaderと同じにし、header側で持たなくなった下側の余白をここで持つ。
+// これにより、追従(sticky)するのは eyebrow-row と h1 までになる。
 .sub {
+  background-color: var(--color-header-bg);
   color: rgba(255, 255, 255, 0.75);
   font-size: 13.5px;
   margin: 0;
+  padding: 0 20px 20px 20px;
 }
 
 // -------------------------------------------------------------
