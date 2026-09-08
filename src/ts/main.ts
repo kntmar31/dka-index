@@ -635,10 +635,16 @@ function toggleTheme (): void {
 }
 
 /**
- * 起動時に保存済みのテーマを反映する。
+ * 起動時に保存済みのテーマを反映し、ヘッダーのテーマ切替ボタン(丸い小さなボタン)に
+ * クリックイベントを登録する。テーマの切替はこのボタンとアクションバーの
+ * テーマ変更ボタンの両方から行える。
  */
 function initTheme (): void {
   applyTheme(currentTheme)
+
+  const btn = document.querySelector('.theme-toggle')
+  if (btn === null) return
+  btn.addEventListener('click', toggleTheme)
 }
 
 /**
