@@ -202,29 +202,7 @@ function handleListClick (e: MouseEvent): void {
 }
 
 /**
- * mainEl内の話数一覧(現在の表示順)の中で、指定した話数から
- * offset個ぶん前後にずれた行要素を取得する。範囲外の場合は最も近い端の行を返す。
- *
- * @param num 基準となる話数
- * @param offset ずらす件数(正の値で後ろ、負の値で前)
- * @returns 見つかった行要素。基準の話数自体が一覧に無い場合は null
- */
-function getRowOffsetFrom (num: number, offset: number): Element | null {
-  const rows = Array.from(mainEl.querySelectorAll('a.row[data-num]'))
-  const index = rows.findIndex((row) => row.getAttribute('data-num') === String(num))
-  if (index === -1) return null
-
-  const clampedIndex = Math.min(Math.max(index + offset, 0), rows.length - 1)
-  return rows[clampedIndex]
-}
-
-/**
- * 指定した話数の行を、現在の並び順に応じた見え方でスクロールする。
- * - 古い順(asc): 対象が画面の上から3番目くらいの位置に来るようにする
- *   (2つ前の話数の行をヘッダー直下に揃える)
- * - 新しい順(desc): 対象が画面の下から3番目くらいの位置に来るようにする
- *   (2つ後の話数の行を画面下端に揃える)
- * 先頭/末尾付近で2つ前後の行が無い場合は自動的にクランプされる。
+ * 指定した話数の行を、画面の真ん中に来るようにスクロールする。
  *
  * @param num スクロール先の話数
  * @param behavior スクロールの挙動('auto' = 瞬時、'smooth' = アニメーション)
@@ -233,20 +211,12 @@ function scrollToEpisode (num: number, behavior: ScrollBehavior): void {
   const target = mainEl.querySelector('[data-num="' + String(num) + '"]')
   if (target === null) return
 
-  if (sortOrder === 'asc') {
-    const anchorRow = getRowOffsetFrom(num, -2)
-    const el = anchorRow !== null ? anchorRow : target
-    el.scrollIntoView({ behavior, block: 'start' })
-  } else {
-    const anchorRow = getRowOffsetFrom(num, 2)
-    const el = anchorRow !== null ? anchorRow : target
-    el.scrollIntoView({ behavior, block: 'end' })
-  }
+  target.scrollIntoView({ behavior, block: 'center' })
 }
 
 /**
  * 並び順を切り替えたあとのスクロール位置を調整する。
- * 「最後に読んだ話数」(lastReadNum)の行が、現在の並び順に応じた位置に来るようスクロールする。
+ * 「最後に読んだ話数」(lastReadNum)の行が画面の真ん中に来るようスクロールする。
  * lastReadNum が null の場合(まだ何も読んでいない場合)は画面の一番上に戻す。
  */
 function restoreScrollAfterSort (): void {
