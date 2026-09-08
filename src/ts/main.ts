@@ -4,8 +4,9 @@
  * 「堀さんと宮村くん 全話リスト」アプリのメインロジック。
  * - Google Apps Script API からのデータ取得(読み込み中/エラー状態の表示を含む)
  * - 既読管理・最後に読んだ話数・並び順・話数カウントの記憶(localStorage、単一キーにまとめて保存)
- * - 検索・並び替え
- * - 右下のFAB(フローティングアクションボタン)によるクイックメニュー
+ * - 検索・並び替え(画面下部のアクションバーから操作する)
+ * - 画面下部に常時表示するクイックアクションバー(テーマ/並び替え/次の未読話/一番上へ/
+ *   一番下へ/検索)
  * を担う。
  */
 
@@ -144,6 +145,12 @@ let currentTheme: Theme = initialState.theme
 /** 前回API取得時点での話数。今回の取得結果と比較し、増えていれば更新通知を出す。 */
 let lastKnownCount: number | null = initialState.lastKnownCount
 
+/**
+ * 現在の検索文字列。ヘッダーには検索欄を置かず、画面下部のアクションバーの
+ * 検索欄だけで管理するため、DOM(inputの値)ではなくこの変数を単一の情報源にする。
+ */
+let searchQuery = ''
+
 /** 画面の状態。起動直後は読み込み中。 */
 let loadState: LoadState = 'loading'
 
@@ -155,10 +162,6 @@ let hasScrolledToLastRead = false
 
 const headerEl = document.querySelector('header') as HTMLElement
 const mainEl = document.getElementById('main') as HTMLElement
-const countEl = document.getElementById('count') as HTMLElement
-const searchEl = document.getElementById('search') as HTMLInputElement
-const sortAscBtn = document.getElementById('sortAsc') as HTMLButtonElement
-const sortDescBtn = document.getElementById('sortDesc') as HTMLButtonElement
 
 /**
  * 指定した話数を既読としてマークする。
@@ -256,7 +259,19 @@ function restoreScrollAfterSort (): void {
 }
 
 /**
- * 並び順を切り替え、保存し、ボタンの見た目(active状態)を更新したうえで再描画する。
+ * アクションバーの並び替えボタンのラベルを、現在の並び順に合わせて更新する。
+ * 他のボタン(「一番上へ」「次の話し」など)がタップした時に起きる動作を
+ * 示しているのに合わせ、こちらも「今どちらか」ではなく「タップすると
+ * 切り替わる先」を示す(現在desc(新しい順)なら次はasc(古い順)になるので「古い順」)。
+ */
+function updateSortActionLabel (): void {
+  const label = document.querySelector('.fab-item[data-action="sort"] .fab-item-label')
+  if (label === null) return
+  label.textContent = sortOrder === 'desc' ? '古い順' : '新しい順'
+}
+
+/**
+ * 並び順を切り替え、保存し、アクションバーのラベルを更新したうえで再描画する。
  * 再描画後、スクロール位置を「最後に読んだ話数」に合わせ直す。
  *
  * @param order 新しい並び順
@@ -264,9 +279,8 @@ function restoreScrollAfterSort (): void {
 function setSortOrder (order: SortOrder): void {
   sortOrder = order
   persistState()
-  sortAscBtn.classList.toggle('active', order === 'asc')
-  sortDescBtn.classList.toggle('active', order === 'desc')
-  render(searchEl.value)
+  updateSortActionLabel()
+  render(searchQuery)
 
   restoreScrollAfterSort()
 }
@@ -367,32 +381,29 @@ function renderError (): void {
 }
 
 /**
- * 「最新話が更新されました」の通知を画面下部に固定表示する。
- * 一覧の中に組み込むのではなく、ウインドウ下部に浮かせる形にする
- * (読み込み中・エラー時のカード(state-card)と同じ配色・枠線・角丸・影を踏襲する)。
- *
- * 登場時は少し下の位置から、透明な状態からフェード+スライドインで現れる。
- * 5秒経過すると、その場でフェードアウトして消える(スライドはしない)。
+ * 「最新話が更新されました」の通知を画面中央にオーバーレイ表示する。
+ * main の中身を差し替えるのではなく、話数一覧の上に浮かせる形にすることで、
+ * 通知が出ている間も背後に一覧が見えるようにする。
+ * 見た目は読み込み中・エラー時のカード(state-card)をそのまま使い、
+ * 「NEW」バッジを添える。フェード+スライドインで現れ、
+ * 一定時間後にその場でフェードアウトして消える。
  */
-function showUpdateNotice (): void {
-  const NOTICE_DURATION_MS = 5000
-  const NOTICE_TRANSITION_MS = 250
+function showUpdateAnnouncement (): void {
+  const ANNOUNCEMENT_DURATION_MS = 1200
+  const ANNOUNCEMENT_TRANSITION_MS = 250
 
-  const notice = document.createElement('div')
-  notice.className = 'update-notice'
-  notice.innerHTML =
-    '<div class="update-notice-card">' +
+  const overlay = document.createElement('div')
+  overlay.className = 'update-overlay'
+  overlay.innerHTML =
+    '<div class="state-card">' +
+    '<span class="update-badge">NEW</span>' +
     '<p class="state-text">最新話が更新されました</p>' +
     '</div>'
-  document.body.appendChild(notice)
+  document.body.appendChild(overlay)
 
-  const card = notice.querySelector('.update-notice-card')
+  const card = overlay.querySelector('.state-card')
   if (card === null) return
 
-  // 生成直後は非表示の状態(透明・少し下の位置)のままにしておき、
-  // 次の描画フレームで is-visible を付けることで、フェード+スライドインの
-  // トランジションを確実に発生させる(スタイル適用と同じフレームで
-  // クラスを付けると、ブラウザによってはアニメーションされないことがあるため)。
   window.requestAnimationFrame(() => {
     window.requestAnimationFrame(() => {
       card.classList.add('is-visible')
@@ -401,18 +412,19 @@ function showUpdateNotice (): void {
 
   window.setTimeout(() => {
     card.classList.remove('is-visible')
-    card.classList.add('is-leaving') // その場でフェードアウトさせる(位置は動かさない)
+    card.classList.add('is-leaving')
     window.setTimeout(() => {
-      notice.remove()
-    }, NOTICE_TRANSITION_MS)
-  }, NOTICE_DURATION_MS)
+      overlay.remove()
+    }, ANNOUNCEMENT_TRANSITION_MS)
+  }, ANNOUNCEMENT_DURATION_MS)
 }
 
 /**
  * 検索文字列に応じて一覧を絞り込み、20話ごとのグループ・並び順を適用して描画する。
  * 検索中はグループ分けを行わず、単一のフラットなリストとして表示する。
+ * 検索中の件数表示は、アクションバーの検索欄そばにある専用の要素に反映する。
  *
- * @param filterText 検索ボックスの入力値
+ * @param filterText 検索文字列(searchQueryを渡す)
  */
 function renderList (filterText: string): void {
   const q = filterText.trim().toLowerCase()
@@ -420,7 +432,10 @@ function renderList (filterText: string): void {
     ? DATA.filter((it) => String(it.num).includes(q) || it.title.toLowerCase().includes(q))
     : DATA
 
-  countEl.textContent = q.length > 0 ? String(filtered.length) + ' 件' : String(DATA.length) + ' 話'
+  const countEl = document.getElementById('actionBarSearchCount')
+  if (countEl !== null) {
+    countEl.textContent = q.length > 0 ? String(filtered.length) + ' 件' : ''
+  }
 
   if (filtered.length === 0) {
     mainEl.innerHTML =
@@ -463,7 +478,7 @@ function renderList (filterText: string): void {
 /**
  * 現在の loadState に応じて、読み込み中/エラー/一覧のいずれかを描画する。
  *
- * @param filterText 検索ボックスの入力値(一覧表示時のみ使用)
+ * @param filterText 検索文字列(一覧表示時のみ使用)
  */
 function render (filterText: string): void {
   if (loadState === 'loading') {
@@ -504,19 +519,26 @@ function scrollToNextUnread (): void {
 }
 
 /**
- * FAB(開閉ボタン・サブメニュー)を表示する。
- * ページの読み込みが完了し、話数一覧が表示されたあとにのみ呼び出す
- * (読み込み中・エラー中は body に is-ready クラスが付かず、CSS側で非表示のまま)。
+ * 画面下部に常時表示するクイックアクションバーをフェード+スライドインで表示する。
+ * ページの読み込みが完了したあとに1度だけ呼び出し、以降は自動で消えることなく
+ * 表示され続ける。
  */
-function showFab (): void {
-  document.body.classList.add('is-ready')
+function showActionBar (): void {
+  const bar = document.getElementById('actionBar')
+  if (bar === null) return
+
+  window.requestAnimationFrame(() => {
+    window.requestAnimationFrame(() => {
+      bar.classList.add('is-visible')
+    })
+  })
 }
 
 /**
  * Google Apps Script API から話数リストを取得する。
  * 成功すれば DATA にセットして一覧を表示し、失敗すればエラー状態を表示する。
  * あわせて、前回取得時より話数(count)が増えていないかを確認し、
- * 増えていれば画面下部に更新通知を表示する。
+ * 増えていれば画面中央へ更新通知をオーバーレイ表示する。
  */
 async function loadLiveData (): Promise<void> {
   try {
@@ -556,11 +578,9 @@ async function loadLiveData (): Promise<void> {
     DATA = episodes
     loadState = 'ready'
 
-    // 前回取得時の話数と比較し、増えていれば画面下部に更新通知を表示する。
+    // 前回取得時の話数と比較し、増えていれば更新通知を出す。
     // (初回訪問など、前回値が無い場合は通知しない。今回の値を新たな基準として保存する。)
-    if (lastKnownCount !== null && data.count > lastKnownCount) {
-      showUpdateNotice()
-    }
+    const hasNewEpisodes = lastKnownCount !== null && data.count > lastKnownCount
     lastKnownCount = data.count
 
     // 既読情報を新しい話数リストに合わせて整合させる。
@@ -575,14 +595,19 @@ async function loadLiveData (): Promise<void> {
     // 既読情報のクリーンアップ・話数カウントの更新をまとめて保存する。
     persistState()
 
-    render(searchEl.value)
+    render(searchQuery)
     scrollToNextUnread()
-    showFab()
+
+    if (hasNewEpisodes) {
+      showUpdateAnnouncement()
+    }
+
+    showActionBar()
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
     loadState = 'error'
     loadErrorMessage = message
-    render(searchEl.value)
+    render(searchQuery)
   }
 }
 
@@ -601,7 +626,7 @@ function applyTheme (theme: Theme): void {
 
 /**
  * カラーテーマを切り替え、反映・保存する。
- * ヘッダーのテーマ切替ボタンとFABメニューの両方から共通で呼び出される。
+ * アクションバーのテーマ切替ボタンから呼び出される。
  */
 function toggleTheme (): void {
   currentTheme = currentTheme === 'lime' ? 'amber' : 'lime'
@@ -610,10 +635,11 @@ function toggleTheme (): void {
 }
 
 /**
- * カラーテーマ切り替えボタンの初期化。
- * 起動時に保存済みのテーマを反映し、クリックのたびにテーマをトグルする。
+ * 起動時に保存済みのテーマを反映し、ヘッダーのテーマ切替ボタン(丸い小さなボタン)に
+ * クリックイベントを登録する。テーマの切替はこのボタンとアクションバーの
+ * テーマ変更ボタンの両方から行える。
  */
-function initThemeToggle (): void {
+function initTheme (): void {
   applyTheme(currentTheme)
 
   const btn = document.querySelector('.theme-toggle')
@@ -632,136 +658,116 @@ function updateHeaderHeightVar (): void {
 }
 
 /**
- * iOS Safariでは、スクロールに伴うツールバー(アドレスバー)の表示/非表示アニメーション中、
- * 「レイアウトビューポート」と「実際に見えているビューポート(visual viewport)」の間に
- * 一時的なズレが生じる。position: fixed の要素(FABなど)はレイアウトビューポート基準で
- * 位置決めされるため、このズレの間、見た目の位置は正しいのにタップ判定だけがずれてしまう
- * ことがある(特にツールバーが再表示される、上方向へのスクロール時に起こりやすい)。
+ * 画面下部に常時表示するクイックアクションバー(テーマ/並び替え/次の未読話/一番上へ/
+ * 一番下へ/検索)を初期化する。以前のFAB(開閉ボタン+開閉式サブメニュー)は廃止し、
+ * 常に表示された各ボタンを直接タップ/クリックする形に変更した。
  *
- * window.visualViewport から実際に見えている範囲を取得し、レイアウトビューポートとの
- * 差分を CSS カスタムプロパティ(--fab-vv-offset)に反映することで、FABの位置を
- * 実際に見えているビューポートに追従させ、タップ判定のズレを避ける。
- *
- * 上方向へのオーバースクロール(バウンス)中は vv.offsetTop が一時的に負の値になったり、
- * 計算結果が異常に大きくなったりすることがあるため、offsetTop を0以上にクランプし、
- * 最終的な補正値も 0〜100px の範囲に収めることで、異常値がそのままFABの位置に
- * 反映されてしまうのを防ぐ。
+ * 検索ボタンだけは他のボタンと違い、単発の動作ではなく状態を持つ切り替え式にしている。
+ * タップすると他のボタンが隠れて検索欄が現れ、ボタン自体も閉じるボタンに変わる。
+ * もう一度押すと元のボタン一覧に戻り、検索文字列もクリアされる
+ * (ヘッダーには検索欄を置いていないため、検索はこのアクションバーが唯一の入り口になる)。
  */
-function initFabViewportSync (): void {
-  const visualViewportEl = window.visualViewport
-  if (visualViewportEl === null) return
-
-  // ネストした関数(クロージャ)の中でも非nullとして扱えるよう、
-  // 明示的な非null型で束ね直しておく。
-  const vv: VisualViewport = visualViewportEl
-
-  function sync (): void {
-    const currentOffsetTop = Math.max(0, vv.offsetTop)
-    const offset = window.innerHeight - (vv.height + currentOffsetTop)
-    const safeOffset = Math.max(0, Math.min(offset, 100))
-    document.documentElement.style.setProperty('--fab-vv-offset', String(safeOffset) + 'px')
-  }
-
-  vv.addEventListener('resize', sync)
-  vv.addEventListener('scroll', sync)
-  sync()
-}
-
-/**
- * 右下のFAB(フローティングアクションボタン)クイックメニューを初期化する。
- *
- * .fab-menu と .fab-main は共通の親要素を持たない独立した要素として扱う
- * (以前は .fab-wrap でまとめていたが、閉じている間もレイアウト上のスペースを
- * 占有し続け、その見えない領域が下にある話数リンクへのタップを奪ってしまう
- * 不具合があったため、親要素ごと廃止した)。
- *
- * 操作方法はPC・スマートフォンともに統一し、開閉ボタンをクリック(タップ)すると
- * サブメニューが開閉する。長押しでの表示は行わない
- * (以前実装していたが、スマートフォンでの反応不良が解消しきれなかったため撤去した)。
- *
- * ページの読み込みが完了し話数一覧が表示されるまでは、CSS側(body:not(.is-ready))で
- * 非表示にしている。イベントリスナー自体は先に登録しておき、表示だけを後から出す。
- *
- * メニューが開いている間は、開閉ボタン自体が少し縮んで「閉じる(✕)」アイコンに変わる。
- */
-function initFab (): void {
-  const CLOSE_ICON = '\u2715' // ✕
-  const OPEN_ICON = '\u22EE' // ⋮
-
-  const fabMainEl = document.getElementById('fabMain')
-  const fabMenuEl = document.getElementById('fabMenu')
-  if (fabMainEl === null || fabMenuEl === null) return
-
-  // ネストした関数(クロージャ)の中でも非nullとして扱えるよう、
-  // 明示的な非null型で束ね直しておく。
-  const fabMain: HTMLElement = fabMainEl
-  const fabMenu: HTMLElement = fabMenuEl
-
-  /**
-   * メニューの開閉状態に合わせて、開閉ボタンの見た目(サイズ・アイコン)と
-   * メニュー自体の aria-hidden 属性を同期する。
-   */
-  function syncFabMainVisual (): void {
-    const isOpen = fabMenu.classList.contains('is-open')
-    fabMain.classList.toggle('is-open', isOpen)
-    fabMain.textContent = isOpen ? CLOSE_ICON : OPEN_ICON
-    fabMenu.setAttribute('aria-hidden', String(!isOpen))
-  }
-
-  function openMenu (): void {
-    fabMenu.classList.add('is-open')
-    syncFabMainVisual()
-  }
-
-  function closeMenu (): void {
-    fabMenu.classList.remove('is-open')
-    syncFabMainVisual()
-  }
-
-  function toggleMenu (): void {
-    if (fabMenu.classList.contains('is-open')) {
-      closeMenu()
-    } else {
-      openMenu()
-    }
-  }
-
+function initActionBar (): void {
   function scrollToTop (): void {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  function fabScrollToNextUnread (): void {
+  function scrollToBottom (): void {
+    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })
+  }
+
+  function actionBarScrollToNextUnread (): void {
     const nextNum = getNextUnreadNum()
     if (nextNum === null) return
     scrollToEpisode(nextNum, 'smooth')
   }
 
-  function fabToggleSort (): void {
+  function actionBarToggleSort (): void {
     setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
   }
 
-  fabMain.addEventListener('click', toggleMenu)
-
-  document.querySelectorAll('.fab-item').forEach((item) => {
+  document.querySelectorAll('.fab-item[data-action]:not([data-action="search"])').forEach((item) => {
     item.addEventListener('click', () => {
       const action = item.getAttribute('data-action')
       if (action === 'top') scrollToTop()
-      if (action === 'next') fabScrollToNextUnread()
+      if (action === 'bottom') scrollToBottom()
+      if (action === 'next') actionBarScrollToNextUnread()
       if (action === 'theme') toggleTheme()
-      if (action === 'sort') fabToggleSort()
-      closeMenu()
+      if (action === 'sort') actionBarToggleSort()
     })
   })
 
-  document.addEventListener('click', (e) => {
-    const target = e.target
-    // .fab-menu と #fabMain は独立した要素のため、両方を対象にチェックする。
-    if (target instanceof Element && target.closest('.fab-menu, #fabMain') === null) {
-      closeMenu()
+  initActionBarSearch()
+}
+
+/**
+ * アクションバーの検索ボタンの開閉を初期化する。
+ * 開くと他のボタンが隠れて検索欄が現れ、ボタン自体が閉じるボタンに変わる。
+ * カード(背景)自体の横幅はCSSで固定してあるため、ボタンを隠しても縮まず、
+ * 空いたスペースに検索欄が伸びる形になる。
+ * 閉じると検索文字列をクリアし、一覧の表示も元(フィルタなし)に戻す。
+ */
+function initActionBarSearch (): void {
+  const CLOSE_ICON = '\u2715' // ✕
+  const SEARCH_ICON_HTML =
+    '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+    '<circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>'
+
+  const cardEl = document.getElementById('actionBarCard')
+  const searchBtnEl = document.getElementById('actionBarSearchBtn')
+  const barSearchInputEl = document.getElementById('actionBarSearchInput')
+  if (cardEl === null || searchBtnEl === null || barSearchInputEl === null) return
+  if (!(barSearchInputEl instanceof HTMLInputElement)) return
+
+  const iconEl = searchBtnEl.querySelector('.fab-item-icon')
+  const labelEl = searchBtnEl.querySelector('.fab-item-label')
+  if (iconEl === null || labelEl === null) return
+
+  // ネストした関数(クロージャ)の中でも非nullとして扱えるよう、
+  // 明示的な非null型で束ね直しておく。
+  const card: HTMLElement = cardEl
+  const searchBtn: HTMLElement = searchBtnEl
+  const barSearchInput: HTMLInputElement = barSearchInputEl
+  const icon: Element = iconEl
+  const label: Element = labelEl
+
+  function openSearch (): void {
+    card.classList.add('is-search-open')
+    barSearchInput.value = searchQuery
+    icon.innerHTML = CLOSE_ICON
+    label.textContent = '閉じる'
+    barSearchInput.focus()
+  }
+
+  function closeSearch (): void {
+    card.classList.remove('is-search-open')
+    icon.innerHTML = SEARCH_ICON_HTML
+    label.textContent = '検索'
+
+    // 閉じたら検索文字列もクリアし、一覧の表示を元(フィルタなし)に戻す。
+    barSearchInput.value = ''
+    searchQuery = ''
+    render(searchQuery)
+  }
+
+  searchBtn.addEventListener('click', () => {
+    if (card.classList.contains('is-search-open')) {
+      // クリック(タップ)完了の直後は :active がまだ残っていることがあり、
+      // このタイミングで is-search-open を外すと、切り替わった直後の
+      // 検索アイコンのボタンに一瞬だけ通常の:active背景色が付いて見えることがある。
+      // 1フレーム遅らせることで、:active が完全に解除されてから切り替えるようにする。
+      window.requestAnimationFrame(() => {
+        closeSearch()
+      })
+    } else {
+      openSearch()
     }
   })
 
-  syncFabMainVisual()
+  barSearchInput.addEventListener('input', () => {
+    searchQuery = barSearchInput.value
+    render(searchQuery)
+  })
 }
 
 /**
@@ -770,20 +776,14 @@ function initFab (): void {
  */
 function init (): void {
   mainEl.addEventListener('click', handleListClick)
-  searchEl.addEventListener('input', (e) => { render((e.target as HTMLInputElement).value) })
-  sortAscBtn.addEventListener('click', () => { setSortOrder('asc') })
-  sortDescBtn.addEventListener('click', () => { setSortOrder('desc') })
-  initThemeToggle()
-  initFab()
-  initFabViewportSync()
+  initTheme()
+  initActionBar()
+  updateSortActionLabel()
 
   updateHeaderHeightVar()
   window.addEventListener('resize', updateHeaderHeightVar)
 
-  sortAscBtn.classList.toggle('active', sortOrder === 'asc')
-  sortDescBtn.classList.toggle('active', sortOrder === 'desc')
-
-  render(searchEl.value) // 読み込み中表示を出す
+  render(searchQuery) // 読み込み中表示を出す
 
   void loadLiveData()
 }
