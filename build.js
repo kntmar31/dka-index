@@ -4,8 +4,10 @@
 //   1. TypeScript(src/ts) を dist/js にコンパイル
 //   2. SCSS(src/scss) を dist/css にコンパイル
 //   3. src/index.html を dist/index.html にコピー
-//   4. dist/js/main.js 内のプレースホルダー(__GAS_API_URL__)を
+//   4. dist/js/features/apis/gas.js 内のプレースホルダー(__GAS_API_URL__)を
 //      環境変数 GAS_API_URL の値で置換する
+//      (GAS通信ロジックは features/apis/gas.ts に切り出されているため、
+//      main.js ではなくこちらが置換対象になる)
 //
 // 実行: node build.js
 // (事前に `npm install` で devDependencies を入れておくこと)
@@ -46,18 +48,18 @@ function main () {
 
   // 4. GAS_API_URL プレースホルダーの置換
   const gasUrl = process.env.GAS_API_URL
-  const mainJsPath = path.join(DIST_JS_DIR, 'main.js')
+  const gasJsPath = path.join(DIST_JS_DIR, 'features', 'apis', 'gas.js')
 
-  if (!fs.existsSync(mainJsPath)) {
-    console.error('ERROR: ' + mainJsPath + ' が見つかりません。tscのビルドに失敗している可能性があります。')
+  if (!fs.existsSync(gasJsPath)) {
+    console.error('ERROR: ' + gasJsPath + ' が見つかりません。tscのビルドに失敗している可能性があります。')
     process.exit(1)
   }
 
-  let mainJs = fs.readFileSync(mainJsPath, 'utf8')
+  let gasJs = fs.readFileSync(gasJsPath, 'utf8')
   const placeholder = '__GAS_API_URL__'
 
-  if (!mainJs.includes(placeholder)) {
-    console.error('ERROR: placeholder "' + placeholder + '" が dist/js/main.js 内に見つかりません。')
+  if (!gasJs.includes(placeholder)) {
+    console.error('ERROR: placeholder "' + placeholder + '" が ' + gasJsPath + ' 内に見つかりません。')
     process.exit(1)
   }
 
@@ -67,9 +69,9 @@ function main () {
         '(ローカルでの見た目確認用途を想定。本番デプロイ時はCI側でGAS_API_URLシークレットを設定してください。)'
     )
   } else {
-    mainJs = mainJs.split(placeholder).join(gasUrl)
-    fs.writeFileSync(mainJsPath, mainJs, 'utf8')
-    console.log('Injected GAS_API_URL into ' + mainJsPath)
+    gasJs = gasJs.split(placeholder).join(gasUrl)
+    fs.writeFileSync(gasJsPath, gasJs, 'utf8')
+    console.log('Injected GAS_API_URL into ' + gasJsPath)
   }
 
   console.log('Build complete: ' + DIST_DIR)
