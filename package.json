@@ -5,12 +5,14 @@
   "description": "堀さんと宮村くん 全話リスト — 目次アプリ",
   "scripts": {
     "build:ts": "tsc",
+    "build:bundle": "esbuild src/ts/main.ts --bundle --outfile=dist/js/main.js --format=esm --target=es2020",
     "build:scss": "sass src/scss/styles.scss:dist/css/styles.css --no-source-map",
     "build": "node build.js",
     "lint": "ts-standard",
     "lint:fix": "ts-standard --fix"
   },
   "devDependencies": {
+    "esbuild": "^0.23.0",
     "sass": "^1.77.0",
     "ts-standard": "^12.0.2",
     "typescript": "^5.5.0"
