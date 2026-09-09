@@ -1,13 +1,15 @@
 // build.js
 //
 // ビルド手順:
-//   1. TypeScript(src/ts) を dist/js にコンパイル
-//   2. SCSS(src/scss) を dist/css にコンパイル
-//   3. src/index.html を dist/index.html にコピー
-//   4. dist/js/features/apis/gas.js 内のプレースホルダー(__GAS_API_URL__)を
+//   1. TypeScript(src/ts)を型チェックのみ行う(tsc --noEmit。実際のJS出力はesbuildが担う)
+//   2. esbuild で src/ts/main.ts をエントリーポイントとしてバンドルし、
+//      features/ 以下の全ファイルを1つの dist/js/main.js にまとめる
+//   3. SCSS(src/scss) を dist/css にコンパイル
+//   4. src/index.html を dist/index.html にコピー
+//   5. dist/js/main.js 内のプレースホルダー(__GAS_API_URL__)を
 //      環境変数 GAS_API_URL の値で置換する
-//      (GAS通信ロジックは features/apis/gas.ts に切り出されているため、
-//      main.js ではなくこちらが置換対象になる)
+//      (バンドル後は features/apis/gas.ts の中身も main.js に含まれるため、
+//      再び main.js が置換対象になる)
 //
 // 実行: node build.js
 // (事前に `npm install` で devDependencies を入れておくこと)
@@ -34,32 +36,35 @@ function main () {
   ensureDir(DIST_JS_DIR)
   ensureDir(DIST_CSS_DIR)
 
-  // 1. TypeScript -> dist/js
+  // 1. TypeScript の型チェックのみ(tsconfig.json は noEmit: true)
   run('npx tsc')
 
-  // 2. SCSS -> dist/css
+  // 2. esbuild で features/ 以下をすべて1つの dist/js/main.js にバンドルする
+  run('npx esbuild src/ts/main.ts --bundle --outfile=' + path.join('dist', 'js', 'main.js') + ' --format=esm --target=es2020')
+
+  // 3. SCSS -> dist/css
   run('npx sass src/scss/styles.scss:dist/css/styles.css --no-source-map')
 
-  // 3. index.html をそのままコピー(パスは最初から dist 構成基準で書かれている)
+  // 4. index.html をそのままコピー(パスは最初から dist 構成基準で書かれている)
   const srcHtmlPath = path.join(ROOT, 'src', 'index.html')
   const distHtmlPath = path.join(DIST_DIR, 'index.html')
   fs.copyFileSync(srcHtmlPath, distHtmlPath)
   console.log('Copied index.html -> ' + distHtmlPath)
 
-  // 4. GAS_API_URL プレースホルダーの置換
+  // 5. GAS_API_URL プレースホルダーの置換
   const gasUrl = process.env.GAS_API_URL
-  const gasJsPath = path.join(DIST_JS_DIR, 'features', 'apis', 'gas.js')
+  const mainJsPath = path.join(DIST_JS_DIR, 'main.js')
 
-  if (!fs.existsSync(gasJsPath)) {
-    console.error('ERROR: ' + gasJsPath + ' が見つかりません。tscのビルドに失敗している可能性があります。')
+  if (!fs.existsSync(mainJsPath)) {
+    console.error('ERROR: ' + mainJsPath + ' が見つかりません。esbuildのビルドに失敗している可能性があります。')
     process.exit(1)
   }
 
-  let gasJs = fs.readFileSync(gasJsPath, 'utf8')
+  let mainJs = fs.readFileSync(mainJsPath, 'utf8')
   const placeholder = '__GAS_API_URL__'
 
-  if (!gasJs.includes(placeholder)) {
-    console.error('ERROR: placeholder "' + placeholder + '" が ' + gasJsPath + ' 内に見つかりません。')
+  if (!mainJs.includes(placeholder)) {
+    console.error('ERROR: placeholder "' + placeholder + '" が ' + mainJsPath + ' 内に見つかりません。')
     process.exit(1)
   }
 
@@ -69,9 +74,9 @@ function main () {
         '(ローカルでの見た目確認用途を想定。本番デプロイ時はCI側でGAS_API_URLシークレットを設定してください。)'
     )
   } else {
-    gasJs = gasJs.split(placeholder).join(gasUrl)
-    fs.writeFileSync(gasJsPath, gasJs, 'utf8')
-    console.log('Injected GAS_API_URL into ' + gasJsPath)
+    mainJs = mainJs.split(placeholder).join(gasUrl)
+    fs.writeFileSync(mainJsPath, mainJs, 'utf8')
+    console.log('Injected GAS_API_URL into ' + mainJsPath)
   }
 
   console.log('Build complete: ' + DIST_DIR)
