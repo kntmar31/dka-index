@@ -498,15 +498,48 @@ function scrollToNextUnreadEpisode (behavior: ScrollBehavior): void {
  * スクロールすると、フォールバックフォントで計算した位置に一旦スクロールしたあと
  * フォント切り替えで行の高さがわずかに変わり、「次の話し」ボタンを押した時
  * (フォント読み込み済みの状態)と微妙に結果がズレることがある。
- * document.fonts.ready を待ってからヘッダー高さを再計算し、スクロールする。
+ * document.fonts.ready はフォントの読み込み自体の完了は保証するが、その後の
+ * フォント切り替えに伴うレイアウト再計算(リフロー)が実際に反映されるのは
+ * 次の描画フレーム以降になることがあるため、rAFを2回挟んで描画が完全に
+ * 落ち着いてから(直前のフレームの計算結果が確定してから)ヘッダー高さの
+ * 再計算・スクロールを行う。
+ *
+ * さらに、iOS Safariなどではページ読み込み直後はアドレスバーが展開された状態で
+ * 表示領域(window.innerHeight)が一時的に小さく、その後の操作でアドレスバーが
+ * 縮んで表示領域が広がることがある。この変化が起きた場合、初期表示時の
+ * 中央寄せ位置と後からの操作時の位置がズレて見えることがあるため、
+ * visualViewportのサイズ変化を短時間だけ監視し、変化があればその都度
+ * スクロール位置を計算し直す。
  */
 function scrollToNextUnread (): void {
   if (hasScrolledToLastRead) return
   hasScrolledToLastRead = true
 
   void document.fonts.ready.then(() => {
-    updateHeaderHeightVar()
-    scrollToNextUnreadEpisode('smooth')
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        updateHeaderHeightVar()
+        scrollToNextUnreadEpisode('smooth')
+
+        const vv = window.visualViewport
+        if (vv === null) return
+
+        let reflowCount = 0
+        const MAX_REFLOWS = 3
+        const onViewportResize = (): void => {
+          reflowCount += 1
+          updateHeaderHeightVar()
+          scrollToNextUnreadEpisode('auto')
+          if (reflowCount >= MAX_REFLOWS) {
+            vv.removeEventListener('resize', onViewportResize)
+          }
+        }
+        vv.addEventListener('resize', onViewportResize)
+        window.setTimeout(() => {
+          vv.removeEventListener('resize', onViewportResize)
+        }, 2000)
+      })
+    })
   })
 }
 
