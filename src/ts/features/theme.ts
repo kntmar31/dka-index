@@ -21,6 +21,29 @@ const THEME_COLOR: Record<Theme, string> = {
 }
 
 /**
+ * <meta name="theme-color"> を新しい色で更新する。
+ * content 属性を書き換えるだけだと、ブラウザによっては最初に読み込んだ時点の値の
+ * まま扱われ続け、テーマ切り替え後に反映されないことがある(iOS Safariで
+ * ステータスバー周辺の色が切り替え前のまま残る不具合の一因と考えられる)。
+ * そのため、既存のタグを一旦DOMから削除し、新しいタグとして作り直して
+ * 挿入し直すことで、ブラウザに「新しく追加されたメタタグ」として
+ * 認識させることを狙う。
+ *
+ * @param color 新しい color 値(例: '#aa3b2e')
+ */
+function updateThemeColorMeta (color: string): void {
+  const existing = document.querySelector('meta[name="theme-color"]')
+  if (existing !== null) {
+    existing.remove()
+  }
+
+  const meta = document.createElement('meta')
+  meta.setAttribute('name', 'theme-color')
+  meta.setAttribute('content', color)
+  document.head.appendChild(meta)
+}
+
+/**
  * 指定したテーマを <html> の data-theme 属性と <meta name="theme-color"> に反映する。
  *
  * @param theme 適用するテーマ
@@ -32,10 +55,7 @@ export function applyTheme (theme: Theme): void {
     document.documentElement.removeAttribute('data-theme')
   }
 
-  const themeColorMeta = document.querySelector('meta[name="theme-color"]')
-  if (themeColorMeta !== null) {
-    themeColorMeta.setAttribute('content', THEME_COLOR[theme])
-  }
+  updateThemeColorMeta(THEME_COLOR[theme])
 }
 
 /**
