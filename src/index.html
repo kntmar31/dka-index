@@ -3,6 +3,28 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#aa3b2e">
+<!-- テーマのちらつき防止: CSSやbodyが描画されるより前に、localStorageに保存済みの
+     テーマ(lime)を同期的に読み込んで <html> に data-theme 属性を反映する。
+     これが無いと、一瞬デフォルト(amber)の色で描画されたあとlimeに切り替わるため、
+     iOS Safariがその最初の一瞬の色を見てステータスバー周辺を着色してしまい、
+     テーマ本体がlimeに切り替わった後もamberの帯が残って見える不具合があった。
+     main.js(features/theme.ts)側の初期化処理と役割が重複するが、こちらは
+     「そもそも一瞬でもamberで描画させない」ためのものなので、あえて残す。 -->
+<script>
+(function () {
+  try {
+    var raw = localStorage.getItem('dka-index');
+    if (!raw) return;
+    var parsed = JSON.parse(raw);
+    if (parsed && parsed.theme === 'lime') {
+      document.documentElement.setAttribute('data-theme', 'lime');
+      var meta = document.querySelector('meta[name="theme-color"]');
+      if (meta) meta.setAttribute('content', '#000000');
+    }
+  } catch (e) {}
+})();
+</script>
 <title>堀さんと宮村くん 全話リスト</title>
 <meta name="robots" content="noindex, nofollow, noarchive">
 <meta name="googlebot" content="noindex, nofollow">
