@@ -3,6 +3,21 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#aa3b2e">
+<script>
+(function () {
+  try {
+    var raw = localStorage.getItem('dka-index');
+    if (!raw) return;
+    var parsed = JSON.parse(raw);
+    if (parsed && parsed.theme === 'lime') {
+      document.documentElement.setAttribute('data-theme', 'lime');
+      var meta = document.querySelector('meta[name="theme-color"]');
+      if (meta) meta.setAttribute('content', '#000000');
+    }
+  } catch (e) {}
+})();
+</script>
 <title>堀さんと宮村くん 全話リスト</title>
 <meta name="robots" content="noindex, nofollow, noarchive">
 <meta name="googlebot" content="noindex, nofollow">
@@ -30,10 +45,6 @@
     原作: <a href="https://dka-hero.me/h_02.html" target="_blank" rel="noopener">dka-hero.me</a>(HERO氏)&middot; 画像は複製せず、各話は原作サイトへリンクしています。
   </footer>
 
-  <!-- 設定パネル(フローティング表示)。ヘッダーの歯車ボタン(.settings-toggle)から開く。
-       テーマカラーの選択・最新話への自動スクロールのON/OFF・既読履歴のリセットができる。
-       以前はヘッダーの丸いボタン(.theme-toggle)でテーマの2値トグルをしていたが、
-       この設定パネルに機能を統合した。 -->
   <div class="settings-overlay" id="settingsOverlay" aria-hidden="true">
     <div class="settings-panel">
       <div class="settings-header">
@@ -63,8 +74,6 @@
     </div>
   </div>
 
-  <!-- 画面下部に常時表示するクイックアクションバー。読み込み完了後にフェード+スライドインで現れ、
-       以降は自動で消えない。検索ボタンだけは他と違い、開くと他のボタンが隠れて検索欄に変わる。 -->
   <div class="action-bar" id="actionBar">
     <div class="action-bar-card" id="actionBarCard">
       <button type="button" class="fab-item" data-action="sort" aria-label="並び替え">

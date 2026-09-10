@@ -11,7 +11,17 @@ import { currentTheme, persistState, setCurrentTheme } from './storage.js'
 import { Theme } from './types/types.js'
 
 /**
- * 指定したテーマを <html> の data-theme 属性に反映する。
+ * 各テーマのヘッダー背景色(--color-header-bgと同じ値)。
+ * <meta name="theme-color"> の更新に使う。iOS Safariなどはこのメタタグを見て
+ * ステータスバー周辺の色を決めるため、テーマ切り替え時にCSSと合わせて更新する。
+ */
+const THEME_COLOR: Record<Theme, string> = {
+  amber: '#aa3b2e',
+  lime: '#000000'
+}
+
+/**
+ * 指定したテーマを <html> の data-theme 属性と <meta name="theme-color"> に反映する。
  *
  * @param theme 適用するテーマ
  */
@@ -20,6 +30,11 @@ export function applyTheme (theme: Theme): void {
     document.documentElement.setAttribute('data-theme', 'lime')
   } else {
     document.documentElement.removeAttribute('data-theme')
+  }
+
+  const themeColorMeta = document.querySelector('meta[name="theme-color"]')
+  if (themeColorMeta !== null) {
+    themeColorMeta.setAttribute('content', THEME_COLOR[theme])
   }
 }
 
@@ -37,6 +52,9 @@ export function setTheme (theme: Theme): void {
 
 /**
  * 起動時に保存済みのテーマを反映する。
+ * なお、<head>内の同期的なインラインスクリプト(index.html参照)が
+ * このスクリプト実行より先に data-theme 属性と theme-color を仮反映しているため、
+ * ここでの呼び出しは主に <meta name="theme-color"> の整合を取り直す意味合いが強い。
  */
 export function initTheme (): void {
   applyTheme(currentTheme)
