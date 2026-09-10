@@ -35,8 +35,9 @@ export type Theme = 'amber' | 'lime'
 
 /**
  * localStorage に保存する状態のかたち。
- * 既読話数・最後に読んだ話数・並び順・カラーテーマ・前回取得時の話数を
- * 1つのキーにまとめて保存する(localStorageのキーを増やしすぎないため)。
+ * 既読話数・最後に読んだ話数・並び順・カラーテーマ・前回取得時の話数・
+ * 最新話への自動スクロール設定を1つのキーにまとめて保存する
+ * (localStorageのキーを増やしすぎないため)。
  *
  * 保存例:
  * {
@@ -44,7 +45,8 @@ export type Theme = 'amber' | 'lime'
  *   "lastReadNum": 47,
  *   "sortOrder": "desc",
  *   "theme": "amber",
- *   "lastKnownCount": 613
+ *   "lastKnownCount": 613,
+ *   "jumpToLatestOnUpdate": false
  * }
  */
 export interface StoredState {
@@ -58,4 +60,6 @@ export interface StoredState {
   theme: Theme
   /** 前回API取得時点での話数(count)。未取得の場合は null */
   lastKnownCount: number | null
+  /** 最新話が更新されている時、自動でその話まで飛ぶかどうか */
+  jumpToLatestOnUpdate: boolean
 }
