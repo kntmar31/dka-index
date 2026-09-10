@@ -33,7 +33,8 @@ function loadStoredState (): StoredState {
     lastReadNum: null,
     sortOrder: 'desc',
     theme: 'amber',
-    lastKnownCount: null
+    lastKnownCount: null,
+    jumpToLatestOnUpdate: false
   }
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
@@ -50,8 +51,9 @@ function loadStoredState (): StoredState {
     const sortOrder: SortOrder = obj.sortOrder === 'asc' ? 'asc' : 'desc'
     const theme: Theme = obj.theme === 'lime' ? 'lime' : 'amber'
     const lastKnownCount = typeof obj.lastKnownCount === 'number' ? obj.lastKnownCount : null
+    const jumpToLatestOnUpdate = obj.jumpToLatestOnUpdate === true
 
-    return { readNums, lastReadNum, sortOrder, theme, lastKnownCount }
+    return { readNums, lastReadNum, sortOrder, theme, lastKnownCount, jumpToLatestOnUpdate }
   } catch {
     return fallback
   }
@@ -69,7 +71,8 @@ export function persistState (): void {
       lastReadNum,
       sortOrder,
       theme: currentTheme,
-      lastKnownCount
+      lastKnownCount,
+      jumpToLatestOnUpdate
     }
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
   } catch {
@@ -158,4 +161,15 @@ export let loadErrorMessage = ''
 /** loadErrorMessage を更新する。 */
 export function setLoadErrorMessage (message: string): void {
   loadErrorMessage = message
+}
+
+/**
+ * 最新話が更新されている時に、自動でその話まで飛ぶかどうかの設定
+ * (設定パネルのトグルで変更できる)。デフォルトはOFF。
+ */
+export let jumpToLatestOnUpdate: boolean = initialState.jumpToLatestOnUpdate
+
+/** jumpToLatestOnUpdate を更新する。 */
+export function setJumpToLatestOnUpdate (value: boolean): void {
+  jumpToLatestOnUpdate = value
 }
