@@ -10,8 +10,10 @@
 import { fetchEpisodesAndCount } from './features/apis/gas.js'
 import { initActionBar, showActionBar, updateSortActionLabel } from './features/action-bar.js'
 import { handleListClick, render } from './features/render.js'
-import { scrollToNextUnread, updateHeaderHeightVar } from './features/scroll.js'
+import { scrollToEpisode, scrollToNextUnread, updateHeaderHeightVar } from './features/scroll.js'
+import { initSettings } from './features/settings.js'
 import {
+  jumpToLatestOnUpdate,
   lastKnownCount,
   persistState,
   readSet,
@@ -31,6 +33,8 @@ const mainEl = document.getElementById('main') as HTMLElement
  * 成功すれば DATA にセットして一覧を表示し、失敗すればエラー状態を表示する。
  * あわせて、前回取得時より話数(count)が増えていないかを確認し、
  * 増えていれば画面中央へ更新通知をオーバーレイ表示する。
+ * 「最新話が更新されている時に自動でその話まで飛ぶ」設定がONの場合は、
+ * 通常の「次の話し」位置ではなく、最新話(最大の話数)までスクロールする。
  */
 async function loadLiveData (): Promise<void> {
   try {
@@ -57,7 +61,13 @@ async function loadLiveData (): Promise<void> {
     persistState()
 
     render(searchQuery)
-    scrollToNextUnread()
+
+    if (hasNewEpisodes && jumpToLatestOnUpdate) {
+      const latestNum = Math.max(...episodes.map((ep) => ep.num))
+      scrollToEpisode(latestNum, 'smooth')
+    } else {
+      scrollToNextUnread()
+    }
 
     if (hasNewEpisodes) {
       showUpdateAnnouncement()
@@ -79,6 +89,7 @@ async function loadLiveData (): Promise<void> {
 function init (): void {
   mainEl.addEventListener('click', handleListClick)
   initTheme()
+  initSettings()
   initActionBar()
   updateSortActionLabel()
 

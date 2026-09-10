@@ -2,8 +2,9 @@
  * theme.ts
  *
  * カラーテーマ(amber / lime)の切り替えを担う。
- * 切り替えはヘッダーの丸いボタン(.theme-toggle)からのみ行える
- * (以前はアクションバーにもテーマ変更ボタンがあったが撤去した)。
+ * 以前はヘッダーの丸いボタン(.theme-toggle)でトグル(2値切り替え)していたが、
+ * 設定パネルの色見本から直接選ぶ形に変更したため、トグル関数は廃止し、
+ * 指定したテーマへ直接切り替える setTheme() を公開する。
  */
 
 import { currentTheme, persistState, setCurrentTheme } from './storage.js'
@@ -14,7 +15,7 @@ import { Theme } from './types/types.js'
  *
  * @param theme 適用するテーマ
  */
-function applyTheme (theme: Theme): void {
+export function applyTheme (theme: Theme): void {
   if (theme === 'lime') {
     document.documentElement.setAttribute('data-theme', 'lime')
   } else {
@@ -23,23 +24,20 @@ function applyTheme (theme: Theme): void {
 }
 
 /**
- * カラーテーマを切り替え、反映・保存する。
- * ヘッダーのテーマ切替ボタン(.theme-toggle)から呼び出される。
+ * カラーテーマを指定したものに切り替え、反映・保存する。
+ * 設定パネルの色見本(スウォッチ)から呼び出される。
+ *
+ * @param theme 切り替え先のテーマ
  */
-function toggleTheme (): void {
-  setCurrentTheme(currentTheme === 'lime' ? 'amber' : 'lime')
-  applyTheme(currentTheme)
+export function setTheme (theme: Theme): void {
+  setCurrentTheme(theme)
+  applyTheme(theme)
   persistState()
 }
 
 /**
- * 起動時に保存済みのテーマを反映し、ヘッダーのテーマ切替ボタン(丸い小さなボタン)に
- * クリックイベントを登録する。テーマの切替はこのボタンからのみ行える。
+ * 起動時に保存済みのテーマを反映する。
  */
 export function initTheme (): void {
   applyTheme(currentTheme)
-
-  const btn = document.querySelector('.theme-toggle')
-  if (btn === null) return
-  btn.addEventListener('click', toggleTheme)
 }
