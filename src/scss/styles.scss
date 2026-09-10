@@ -614,21 +614,25 @@ footer {
 // 設定パネル(フローティング表示)
 // ヘッダーの歯車ボタン(.settings-toggle)から開く。見た目はアクションバーの
 // カードなどと同じ白背景(state-card/action-bar-card系)を踏襲する。
+//
+// [検証用] .settings-overlay は以前 opacity/pointer-events だけで開閉していたが、
+// 画面全体を覆う透明要素が閉じている間もDOM上に(display: flexの状態で)存在し続けており、
+// これがiOS Safariの上下の帯の色再判定を妨げているのではという仮説を検証するため、
+// 閉じている間は display: none にして完全にDOMの影響を無くす形に変更した。
+// この変更により、パネルの開閉時のフェード+スケールのアニメーションは失われる
+// (display: none からの切り替えでは transition が効かないため)。
 // -------------------------------------------------------------
 .settings-overlay {
+  display: none;
   position: fixed;
   inset: 0;
   z-index: 200; // アクションバー・更新通知よりさらに上に表示する
-  display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0);
-  pointer-events: none;
-  transition: background 0.2s ease;
+  background: rgba(0, 0, 0, 0.35);
 
   &.is-open {
-    background: rgba(0, 0, 0, 0.35);
-    pointer-events: auto;
+    display: flex;
   }
 }
 
@@ -641,14 +645,6 @@ footer {
   max-height: 80vh;
   overflow-y: auto;
   padding: 20px;
-  opacity: 0;
-  transform: translateY(12px) scale(0.98);
-  transition: opacity 0.2s ease, transform 0.2s ease;
-}
-
-.settings-overlay.is-open .settings-panel {
-  opacity: 1;
-  transform: translateY(0) scale(1);
 }
 
 .settings-header {
