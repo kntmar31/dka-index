@@ -15,7 +15,12 @@
   <header>
     <div class="eyebrow-row">
       <div class="eyebrow">目次帳 — Index</div>
-      <button type="button" class="theme-toggle" aria-label="カラーテーマ切り替え"></button>
+      <button type="button" class="settings-toggle" id="settingsToggle" aria-label="設定を開く">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+      </button>
     </div>
     <h1>堀さんと宮村くん 全話リスト</h1>
   </header>
@@ -25,9 +30,41 @@
     原作: <a href="https://dka-hero.me/h_02.html" target="_blank" rel="noopener">dka-hero.me</a>(HERO氏)&middot; 画像は複製せず、各話は原作サイトへリンクしています。
   </footer>
 
+  <!-- 設定パネル(フローティング表示)。ヘッダーの歯車ボタン(.settings-toggle)から開く。
+       テーマカラーの選択・最新話への自動スクロールのON/OFF・既読履歴のリセットができる。
+       以前はヘッダーの丸いボタン(.theme-toggle)でテーマの2値トグルをしていたが、
+       この設定パネルに機能を統合した。 -->
+  <div class="settings-overlay" id="settingsOverlay" aria-hidden="true">
+    <div class="settings-panel">
+      <div class="settings-header">
+        <h2 class="settings-title">設定</h2>
+        <button type="button" class="settings-close" id="settingsClose" aria-label="閉じる">&#10005;</button>
+      </div>
+
+      <section class="settings-section">
+        <p class="settings-section-title">テーマカラー</p>
+        <div class="settings-swatches">
+          <button type="button" class="settings-swatch" data-theme="amber" aria-label="amberテーマにする"></button>
+          <button type="button" class="settings-swatch" data-theme="lime" aria-label="limeテーマにする"></button>
+        </div>
+      </section>
+
+      <section class="settings-section">
+        <p class="settings-section-title">最新話への自動スクロール</p>
+        <label class="settings-toggle-row" for="jumpToLatestToggle">
+          <span class="settings-toggle-desc">最新話の更新がある場合には、自動で最新話までスクロールします。</span>
+          <input type="checkbox" id="jumpToLatestToggle" class="settings-checkbox">
+        </label>
+      </section>
+
+      <section class="settings-section">
+        <button type="button" class="settings-reset-btn" id="resetReadHistoryBtn">すべての既読履歴をリセット</button>
+      </section>
+    </div>
+  </div>
+
   <!-- 画面下部に常時表示するクイックアクションバー。読み込み完了後にフェード+スライドインで現れ、
-       以降は自動で消えない。検索ボタンだけは他と違い、開くと他のボタンが隠れて検索欄に変わる。
-       テーマ切り替えはヘッダーの丸いボタン(.theme-toggle)のみで行う。 -->
+       以降は自動で消えない。検索ボタンだけは他と違い、開くと他のボタンが隠れて検索欄に変わる。 -->
   <div class="action-bar" id="actionBar">
     <div class="action-bar-card" id="actionBarCard">
       <button type="button" class="fab-item" data-action="sort" aria-label="並び替え">
