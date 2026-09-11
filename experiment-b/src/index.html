@@ -15,7 +15,7 @@
   } catch (e) {}
 })();
 </script>
-<title>堀さんと宮村くん 全話リスト(検証B・背景透明)</title>
+<title>堀さんと宮村くん 全話リスト(検証B・パネル単体)</title>
 <meta name="robots" content="noindex, nofollow, noarchive">
 <meta name="googlebot" content="noindex, nofollow">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -39,39 +39,37 @@
     </div>
     <h1>堀さんと宮村くん 全話リスト</h1>
   </header>
-  <p class="sub">検証B: 設定パネルの背景(バックドロップ)を完全に透明にしています。パネルを開いたままテーマを切り替えて帯の色を確認してください。</p>
+  <p class="sub">検証B: 画面全体を覆う要素(.settings-overlay)を廃止し、パネル自体だけを画面中央にfixed配置しています。画面を覆う要素が無い状態でテーマを切り替えて帯の色を確認してください。なお、この構成では「パネル外側をタップして閉じる」機能は無くなります(閉じるボタンのみ)。</p>
   <main id="main"></main>
   <footer>
     原作: <a href="https://dka-hero.me/h_02.html" target="_blank" rel="noopener">dka-hero.me</a>(HERO氏)&middot; 画像は複製せず、各話は原作サイトへリンクしています。
   </footer>
 
-  <div class="settings-overlay" id="settingsOverlay" aria-hidden="true">
-    <div class="settings-panel">
-      <div class="settings-header">
-        <h2 class="settings-title">設定(検証B)</h2>
-        <button type="button" class="settings-close" id="settingsClose" aria-label="閉じる">&#10005;</button>
-      </div>
-
-      <section class="settings-section">
-        <p class="settings-section-title">テーマカラー</p>
-        <div class="settings-swatches">
-          <button type="button" class="settings-swatch" data-theme="amber" aria-label="amberテーマにする"></button>
-          <button type="button" class="settings-swatch" data-theme="lime" aria-label="limeテーマにする"></button>
-        </div>
-      </section>
-
-      <section class="settings-section">
-        <p class="settings-section-title">最新話への自動スクロール</p>
-        <label class="settings-toggle-row" for="jumpToLatestToggle">
-          <span class="settings-toggle-desc">最新話の更新がある場合には、自動で最新話までスクロールします。</span>
-          <input type="checkbox" id="jumpToLatestToggle" class="settings-checkbox">
-        </label>
-      </section>
-
-      <section class="settings-section">
-        <button type="button" class="settings-reset-btn" id="resetReadHistoryBtn">すべての既読履歴をリセット</button>
-      </section>
+  <div class="settings-panel" id="settingsOverlay" aria-hidden="true">
+    <div class="settings-header">
+      <h2 class="settings-title">設定(検証B)</h2>
+      <button type="button" class="settings-close" id="settingsClose" aria-label="閉じる">&#10005;</button>
     </div>
+
+    <section class="settings-section">
+      <p class="settings-section-title">テーマカラー</p>
+      <div class="settings-swatches">
+        <button type="button" class="settings-swatch" data-theme="amber" aria-label="amberテーマにする"></button>
+        <button type="button" class="settings-swatch" data-theme="lime" aria-label="limeテーマにする"></button>
+      </div>
+    </section>
+
+    <section class="settings-section">
+      <p class="settings-section-title">最新話への自動スクロール</p>
+      <label class="settings-toggle-row" for="jumpToLatestToggle">
+        <span class="settings-toggle-desc">最新話の更新がある場合には、自動で最新話までスクロールします。</span>
+        <input type="checkbox" id="jumpToLatestToggle" class="settings-checkbox">
+      </label>
+    </section>
+
+    <section class="settings-section">
+      <button type="button" class="settings-reset-btn" id="resetReadHistoryBtn">すべての既読履歴をリセット</button>
+    </section>
   </div>
 
   <div class="action-bar" id="actionBar">
