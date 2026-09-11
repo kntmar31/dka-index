@@ -1,8 +1,11 @@
 /**
  * settings.ts
  *
- * [検証B] .settings-overlayの背景を透明にしている以外は現行版と同じ。
- * JS側のロジックは変更なし(強制リフローなどの実験的処理は含まない)。
+ * [検証B v3] .settings-overlay(画面全体を覆う要素)を廃止し、パネル本体だけを
+ * fixed配置している。画面を覆う要素がないため「パネル外側タップで閉じる」を
+ * 従来のオーバーレイのクリックイベントでは実現できない。代わりに、
+ * document全体のクリックを監視し、クリック位置がパネルの外側かどうかを
+ * JavaScriptだけで判定して閉じる(新しい要素をDOMに追加しない)。
  */
 
 import { render } from './render.js'
@@ -56,10 +59,16 @@ export function initSettings (): void {
     closeBtn.addEventListener('click', closeSettings)
   }
 
-  overlay.addEventListener('click', (e) => {
-    if (e.target === overlay) {
-      closeSettings()
-    }
+  // [検証B v3] パネルを覆う背景要素が無いため、document全体のクリックを見て
+  // 「開いている状態で、パネルの外側(かつ設定ボタン自体でもない)をクリックしたか」を
+  // 判定し、該当すれば閉じる。新しい要素はDOMに追加しないため、画面を覆う要素が
+  // 原因だったiOS Safariの色残り問題には影響しないはず。
+  document.addEventListener('click', (e) => {
+    if (!overlay.classList.contains('is-open')) return
+    const target = e.target as Node
+    if (overlay.contains(target)) return
+    if (toggleBtn.contains(target)) return
+    closeSettings()
   })
 
   swatches.forEach((swatch) => {
