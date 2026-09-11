@@ -104,7 +104,7 @@ header {
   padding: 20px 20px 8px 20px;
 }
 
-// eyebrow(「目次帳 — Index」)とカラーテーマ切り替えボタンを同じ行に並べる。
+// eyebrow(「目次帳 — Index」)と設定ボタンを同じ行に並べる。
 .eyebrow-row {
   display: flex;
   align-items: center;
@@ -121,25 +121,6 @@ header {
   font-weight: 700;
   text-transform: uppercase;
   margin-bottom: 0;
-}
-
-// 検証用: 以前のテーマ切り替えボタンを一時的に復活させ、設定ボタンの左に並べる。
-// iOS Safariのステータスバー色残り問題が、ヘッダー内(画面端)を直接操作した時だけ
-// 直るのかどうかを確認するための一時的な実装。
-.header-buttons {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.theme-toggle {
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  padding: 0;
-  cursor: pointer;
-  background: var(--color-bg-next);
 }
 
 // 設定を開くボタン(歯車アイコン)。以前はここでテーマの2値トグルをしていたが、
