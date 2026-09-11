@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>
+(function () {
+  try {
+    var raw = localStorage.getItem('dka-index');
+    if (!raw) return;
+    var parsed = JSON.parse(raw);
+    if (parsed && parsed.theme === 'lime') {
+      document.documentElement.setAttribute('data-theme', 'lime');
+    }
+  } catch (e) {}
+})();
+</script>
+<title>堀さんと宮村くん 全話リスト(検証A・強制リフロー)</title>
+<meta name="robots" content="noindex, nofollow, noarchive">
+<meta name="googlebot" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;600;700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="experiment-a-css/styles.css">
+</head>
+<body>
+  <header>
+    <div class="eyebrow-row">
+      <div class="eyebrow">目次帳 — Index(検証A)</div>
+      <div class="header-buttons">
+        <button type="button" class="theme-toggle" id="themeToggleBtn" aria-label="カラーテーマ切り替え(検証用)"></button>
+        <button type="button" class="settings-toggle" id="settingsToggle" aria-label="設定を開く">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+    <h1>堀さんと宮村くん 全話リスト</h1>
+  </header>
+  <p class="sub">検証A: スウォッチを押すと、設定パネルを開いたまま body の display を一瞬 none→元に戻す強制リフローを行います。</p>
+  <main id="main"></main>
+  <footer>
+    原作: <a href="https://dka-hero.me/h_02.html" target="_blank" rel="noopener">dka-hero.me</a>(HERO氏)&middot; 画像は複製せず、各話は原作サイトへリンクしています。
+  </footer>
+
+  <div class="settings-overlay" id="settingsOverlay" aria-hidden="true">
+    <div class="settings-panel">
+      <div class="settings-header">
+        <h2 class="settings-title">設定(検証A)</h2>
+        <button type="button" class="settings-close" id="settingsClose" aria-label="閉じる">&#10005;</button>
+      </div>
+
+      <section class="settings-section">
+        <p class="settings-section-title">テーマカラー</p>
+        <div class="settings-swatches">
+          <button type="button" class="settings-swatch" data-theme="amber" aria-label="amberテーマにする"></button>
+          <button type="button" class="settings-swatch" data-theme="lime" aria-label="limeテーマにする"></button>
+        </div>
+      </section>
+
+      <section class="settings-section">
+        <p class="settings-section-title">最新話への自動スクロール</p>
+        <label class="settings-toggle-row" for="jumpToLatestToggle">
+          <span class="settings-toggle-desc">最新話の更新がある場合には、自動で最新話までスクロールします。</span>
+          <input type="checkbox" id="jumpToLatestToggle" class="settings-checkbox">
+        </label>
+      </section>
+
+      <section class="settings-section">
+        <button type="button" class="settings-reset-btn" id="resetReadHistoryBtn">すべての既読履歴をリセット</button>
+      </section>
+    </div>
+  </div>
+
+  <div class="action-bar" id="actionBar">
+    <div class="action-bar-card" id="actionBarCard">
+      <button type="button" class="fab-item" data-action="sort" aria-label="並び替え">
+        <span class="fab-item-icon">⇅</span>
+        <span class="fab-item-label">並び替え</span>
+      </button>
+      <button type="button" class="fab-item" data-action="top" aria-label="一番上へ">
+        <span class="fab-item-icon">↑</span>
+        <span class="fab-item-label">一番上へ</span>
+      </button>
+      <button type="button" class="fab-item" data-action="next" aria-label="次の話し">
+        <span class="fab-item-icon"><span class="icon-next"></span></span>
+        <span class="fab-item-label">次の話し</span>
+      </button>
+      <button type="button" class="fab-item" data-action="bottom" aria-label="一番下へ">
+        <span class="fab-item-icon">↓</span>
+        <span class="fab-item-label">一番下へ</span>
+      </button>
+      <span class="action-bar-search-count" id="actionBarSearchCount"></span>
+      <input type="text" class="action-bar-search-input" id="actionBarSearchInput" placeholder="検索" autocomplete="off">
+      <button type="button" class="fab-item" data-action="search" id="actionBarSearchBtn" aria-label="検索">
+        <span class="fab-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+        <span class="fab-item-label">検索</span>
+      </button>
+    </div>
+  </div>
+
+  <script type="module" src="experiment-a-js/main.js"></script>
+</body>
+</html>
