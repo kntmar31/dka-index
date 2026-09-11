@@ -1,20 +1,17 @@
 /**
  * settings.ts
  *
- * [検証B v4] .settings-overlay(画面全体を覆う要素)を廃止し、パネル本体だけを
+ * [検証B v5] .settings-overlay(画面全体を覆う要素)を廃止し、パネル本体だけを
  * fixed配置している。画面を覆う要素がないため「パネル外側タップで閉じる」を
  * 従来のオーバーレイのクリックイベントでは実現できない。代わりに、
  * documentのpointerdownを監視し、押した位置がパネルの外側かどうかを
  * JavaScriptだけで判定して閉じる(新しい要素をDOMに追加しない)。
  *
- * click ではなく pointerdown を使っているのは、iOS Safariでは document レベルの
- * click イベントが「明確にクリック可能な要素(独自のクリックハンドラを持つ要素など)」を
- * 経由しないと確実にバブリングしない癖があり、話数一覧の背景など単なる表示用の
- * 要素をタップした場合に click が document まで届かないことがあるため。
- * pointerdown はタップ・クリックのどちらでも即座かつ確実に発火し、この種の癖の
- * 影響を受けにくい。また pointerdown は click より先に発火するため、
- * リンクをタップした場合もリンク自体の遷移(新しいタブで開く)は妨げず、
- * パネルを閉じる処理だけを先に済ませられる。
+ * さらに、外側タップで閉じる際は「閉じる」以外の副作用(リンクへの遷移・
+ * 話数の既読化など)を一切起こさないようにしている。pointerdownの時点で
+ * 「これは外側タップによる閉じる操作だ」と判定したら、直後に続くclickイベントを
+ * capture段階でpreventDefault + stopPropagationし、リンクのデフォルト動作や
+ * 他のクリックハンドラ(一覧の既読化処理など)に一切渡さないようにする。
  *
  * また、パネル表示中は背後の一覧がスクロールできてしまうと使い勝手が悪いため、
  * 開いている間だけ document.body に overflow: hidden を適用し、背景のスクロールを止める。
@@ -45,6 +42,9 @@ export function initSettings (): void {
 
   const swatches = Array.from(document.querySelectorAll('.settings-swatch'))
 
+  // 外側タップで閉じた直後に続くclickイベントを握りつぶすためのフラグ。
+  let suppressNextClick = false
+
   function updateSwatchSelection (): void {
     swatches.forEach((swatch) => {
       swatch.classList.toggle('is-selected', swatch.getAttribute('data-theme') === currentTheme)
@@ -73,7 +73,7 @@ export function initSettings (): void {
     closeBtn.addEventListener('click', closeSettings)
   }
 
-  // [検証B v4] パネルを覆う背景要素が無いため、documentのpointerdownを見て
+  // [検証B v5] パネルを覆う背景要素が無いため、documentのpointerdownを見て
   // 「開いている状態で、パネルの外側(かつ設定ボタン自体でもない)を押したか」を
   // 判定し、該当すれば閉じる。新しい要素はDOMに追加しないため、画面を覆う要素が
   // 原因だったiOS Safariの色残り問題には影響しないはず。
@@ -82,8 +82,20 @@ export function initSettings (): void {
     const target = e.target as Node
     if (overlay.contains(target)) return
     if (toggleBtn.contains(target)) return
+
+    suppressNextClick = true
     closeSettings()
   })
+
+  // 直後に続くclickを、capture段階(他のどのハンドラより先)で完全に握りつぶす。
+  // これにより、外側タップがリンクの上だった場合でも遷移せず、
+  // 一覧の既読化処理なども一切実行されない。
+  document.addEventListener('click', (e) => {
+    if (!suppressNextClick) return
+    suppressNextClick = false
+    e.preventDefault()
+    e.stopPropagation()
+  }, true)
 
   swatches.forEach((swatch) => {
     swatch.addEventListener('click', () => {
