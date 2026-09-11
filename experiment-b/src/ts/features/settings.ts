@@ -1,17 +1,19 @@
 /**
  * settings.ts
  *
- * [検証B v5] .settings-overlay(画面全体を覆う要素)を廃止し、パネル本体だけを
+ * [検証B v6] .settings-overlay(画面全体を覆う要素)を廃止し、パネル本体だけを
  * fixed配置している。画面を覆う要素がないため「パネル外側タップで閉じる」を
  * 従来のオーバーレイのクリックイベントでは実現できない。代わりに、
- * documentのpointerdownを監視し、押した位置がパネルの外側かどうかを
+ * documentのpointerdownをcapture段階で監視し、押した位置がパネルの外側かどうかを
  * JavaScriptだけで判定して閉じる(新しい要素をDOMに追加しない)。
  *
- * さらに、外側タップで閉じる際は「閉じる」以外の副作用(リンクへの遷移・
- * 話数の既読化など)を一切起こさないようにしている。pointerdownの時点で
- * 「これは外側タップによる閉じる操作だ」と判定したら、直後に続くclickイベントを
- * capture段階でpreventDefault + stopPropagationし、リンクのデフォルト動作や
- * 他のクリックハンドラ(一覧の既読化処理など)に一切渡さないようにする。
+ * v5まではpointerdownをbubble段階で監視し、続くclickイベントを握りつぶすことで
+ * リンク遷移を防ごうとしていたが、それでも遷移してしまう場合があった。
+ * target="_blank"のリンクは、タップの判定処理自体がclickイベントより早い
+ * (またはそれとは別の)経路で新規タブを開く動作につながっている可能性があるため、
+ * pointerdown自体をcapture段階(イベントがリンク要素に到達する前)で監視し、
+ * 外側タップと判定した瞬間にその場でpreventDefault + stopPropagationするように
+ * 変更した。保険として、従来通り続くclickイベントを握りつぶす処理も残している。
  *
  * また、パネル表示中は背後の一覧がスクロールできてしまうと使い勝手が悪いため、
  * 開いている間だけ document.body に overflow: hidden を適用し、背景のスクロールを止める。
@@ -42,7 +44,7 @@ export function initSettings (): void {
 
   const swatches = Array.from(document.querySelectorAll('.settings-swatch'))
 
-  // 外側タップで閉じた直後に続くclickイベントを握りつぶすためのフラグ。
+  // 外側タップで閉じた直後に続くclickイベントを握りつぶすためのフラグ(保険)。
   let suppressNextClick = false
 
   function updateSwatchSelection (): void {
@@ -73,23 +75,26 @@ export function initSettings (): void {
     closeBtn.addEventListener('click', closeSettings)
   }
 
-  // [検証B v5] パネルを覆う背景要素が無いため、documentのpointerdownを見て
-  // 「開いている状態で、パネルの外側(かつ設定ボタン自体でもない)を押したか」を
-  // 判定し、該当すれば閉じる。新しい要素はDOMに追加しないため、画面を覆う要素が
-  // 原因だったiOS Safariの色残り問題には影響しないはず。
+  // [検証B v6] パネルを覆う背景要素が無いため、documentのpointerdownをcapture段階で見て
+  // 「開いている状態で、パネルの外側(かつ設定ボタン自体でもない)を押したか」を判定し、
+  // 該当すればその場でpreventDefault + stopPropagationしてから閉じる。
+  // capture段階かつイベント自体をここで止めることで、リンク要素(<a>)本体に
+  // イベントが到達する前に処理を打ち切り、target="_blank"のリンクであっても
+  // 新規タブが開かないようにする狙い。
   document.addEventListener('pointerdown', (e) => {
     if (!overlay.classList.contains('is-open')) return
     const target = e.target as Node
     if (overlay.contains(target)) return
     if (toggleBtn.contains(target)) return
 
+    e.preventDefault()
+    e.stopPropagation()
     suppressNextClick = true
     closeSettings()
-  })
+  }, true)
 
-  // 直後に続くclickを、capture段階(他のどのハンドラより先)で完全に握りつぶす。
-  // これにより、外側タップがリンクの上だった場合でも遷移せず、
-  // 一覧の既読化処理なども一切実行されない。
+  // 保険として、直後に続くclickも、capture段階(他のどのハンドラより先)で
+  // 完全に握りつぶす。
   document.addEventListener('click', (e) => {
     if (!suppressNextClick) return
     suppressNextClick = false
