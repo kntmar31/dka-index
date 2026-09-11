@@ -5,6 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script>
 (function () {
+  // リロード時、ブラウザが以前のスクロール位置を自動で復元しようとすると、
+  // JSが実行される前にヘッダー(position: sticky)が最上部に張り付いた状態で
+  // 描画されてしまい、.sub(ヘッダーの外に出しているサブタイトル)が
+  // 見えない状態でページが表示されてしまう。
+  // history.scrollRestoration を 'manual' にして自動復元を無効化し、
+  // 念のため明示的にも一番上へスクロールしておく。
+  // (データ取得完了後、通常通り scrollToNextUnread() が続きの位置まで動かす。)
+  if ('scrollRestoration' in history) {
+    history.scrollRestoration = 'manual';
+  }
+  window.scrollTo(0, 0);
   try {
     var raw = localStorage.getItem('dka-index');
     if (!raw) return;
