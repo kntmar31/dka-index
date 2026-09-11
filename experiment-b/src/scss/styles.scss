@@ -1,7 +1,7 @@
 // =============================================================
 // styles.scss
-// [検証B] .settings-overlay の背景(バックドロップ)を完全に透明にしている点のみ、
-// 現行版のCSSと異なる。
+// [検証B v2] 画面全体を覆う要素(.settings-overlay)自体を廃止し、
+// パネル本体だけを画面中央にfixed配置している点が現行版と異なる。
 // =============================================================
 
 $color-paper: #eee9dc;
@@ -535,23 +535,20 @@ footer {
   border-radius: 999px;
 }
 
-// [検証B] 背景色(暗いバックドロップ)自体が原因かどうかを確かめるため、
-// 完全に透明にしている(display:none/flexの開閉はそのまま維持)。
-.settings-overlay {
+// [検証B v2] 画面全体を覆う要素(.settings-overlay)自体を廃止し、
+// パネル本体だけを画面中央にfixed配置している(コンテンツのサイズ分しか
+// 場所を取らない)。画面を覆う要素が無くても色残り問題が起きるかを確認する。
+// 従来 .settings-overlay に付けていたid(settingsOverlay)は、このパネル本体側に
+// 付け替えている(JS側の実装は変更していない)。
+// 副作用: 画面を覆うクリック領域が無くなるため、「パネル外側タップで閉じる」は
+// 機能しなくなる(閉じるボタンのみで閉じる)。
+.settings-panel {
   display: none;
   position: fixed;
-  inset: 0;
-  z-index: 200;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0);
-
-  &.is-open {
-    display: flex;
-  }
-}
-
-.settings-panel {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 200; // アクションバー・更新通知よりさらに上に表示する
   background: $color-card-bg;
   border: 1px solid $color-border;
   border-radius: 14px;
@@ -560,6 +557,10 @@ footer {
   max-height: 80vh;
   overflow-y: auto;
   padding: 20px;
+
+  &.is-open {
+    display: block;
+  }
 }
 
 .settings-header {
