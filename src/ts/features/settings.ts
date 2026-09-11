@@ -52,10 +52,13 @@ export function initSettings (): void {
 
   /**
    * 設定パネルを開く。開くたびに現在の状態(テーマ・トグル)を反映し直す。
+   * パネル表示中は、背後の一覧がスクロールできてしまうと使い勝手が悪いため、
+   * document.body に overflow: hidden を適用して背景のスクロールを止める。
    */
   function openSettings (): void {
     overlay.classList.add('is-open')
     overlay.setAttribute('aria-hidden', 'false')
+    document.body.style.overflow = 'hidden'
     updateSwatchSelection()
     if (jumpToggleEl instanceof HTMLInputElement) {
       jumpToggleEl.checked = jumpToLatestOnUpdate
@@ -65,6 +68,7 @@ export function initSettings (): void {
   function closeSettings (): void {
     overlay.classList.remove('is-open')
     overlay.setAttribute('aria-hidden', 'true')
+    document.body.style.overflow = ''
   }
 
   toggleBtn.addEventListener('click', openSettings)
