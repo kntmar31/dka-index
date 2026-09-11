@@ -104,7 +104,7 @@ header {
   padding: 20px 20px 8px 20px;
 }
 
-// eyebrow(「目次帳 — Index」)とカラーテーマ切り替えボタンを同じ行に並べる。
+// eyebrow(「目次帳 — Index」)と設定ボタンを同じ行に並べる。
 .eyebrow-row {
   display: flex;
   align-items: center;
@@ -121,25 +121,6 @@ header {
   font-weight: 700;
   text-transform: uppercase;
   margin-bottom: 0;
-}
-
-// 検証用: 以前のテーマ切り替えボタンを一時的に復活させ、設定ボタンの左に並べる。
-// iOS Safariのステータスバー色残り問題が、ヘッダー内(画面端)を直接操作した時だけ
-// 直るのかどうかを確認するための一時的な実装。
-.header-buttons {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.theme-toggle {
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  padding: 0;
-  cursor: pointer;
-  background: var(--color-bg-next);
 }
 
 // 設定を開くボタン(歯車アイコン)。以前はここでテーマの2値トグルをしていたが、
@@ -647,6 +628,14 @@ footer {
   max-height: 80vh;
   overflow-y: auto;
   padding: 20px;
+
+  // 見出し(h2)以外のテキストは font-size を 14px に揃える。
+  p,
+  span,
+  label,
+  button {
+    font-size: 14px;
+  }
 }
 
 .settings-header {
@@ -664,6 +653,10 @@ footer {
   margin: 0;
 }
 
+// 閉じるボタン。以前はテキスト文字(✗)を使っていたが、フォント・環境によって
+// 見た目の大きさに差が出てしまうため、CSSの疑似要素で描いた×印に変更した。
+// 疑似要素を絶対配置+transform: translate(-50%, -50%)で中央に置くことで、
+// ボタンサイズに関わらず常に同じ大きさ・太さの線で描画される。
 .settings-close {
   width: 28px;
   height: 28px;
@@ -671,11 +664,29 @@ footer {
   border: none;
   background: transparent;
   color: $color-ink-soft;
-  font-size: 16px;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  position: relative;
+  padding: 0;
+
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 14px;
+    height: 2px;
+    background: currentColor;
+    border-radius: 1px;
+  }
+
+  &::before {
+    transform: translate(-50%, -50%) rotate(45deg);
+  }
+
+  &::after {
+    transform: translate(-50%, -50%) rotate(-45deg);
+  }
 }
 
 .settings-section {
@@ -693,7 +704,6 @@ footer {
 }
 
 .settings-section-title {
-  font-size: 13px;
   font-weight: 700;
   color: $color-ink-soft;
   margin: 0 0 10px 0;
@@ -750,7 +760,6 @@ footer {
 
 .settings-toggle-desc {
   flex: 1;
-  font-size: 13px;
   line-height: 1.5;
   color: $color-ink-soft;
   margin: 0;
@@ -793,7 +802,6 @@ footer {
 .settings-reset-btn {
   width: 100%;
   font-family: inherit;
-  font-size: 13px;
   font-weight: 700;
   background: transparent;
   color: var(--color-accent);
