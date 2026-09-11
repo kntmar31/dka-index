@@ -1,10 +1,14 @@
 /**
  * settings.ts
  *
- * 設定パネル(フローティング表示)の初期化を担う。
+ * [検証A v2] .settings-overlay を復活させるが、ヘッダーの高さ分だけ上を空け、
+ * ヘッダー以下の領域だけを覆う形にしている(top: var(--header-h))。
+ * オーバーレイという実体が復活したので、外側タップの判定はシンプルな
+ * overlay自身へのclickイベントで十分検知できるはずであり、
+ * pointerdown/capture/イベント握りつぶしといった複雑な仕掛けは廃止した。
  *
- * [検証A] iOS Safariの上下の帯の色残り問題について、スウォッチクリック時に
- * パネルを開いたまま強制リフローを発生させることで色の再判定が起きるかを検証する。
+ * また、パネル表示中は背後の一覧がスクロールできてしまうと使い勝手が悪いため、
+ * 開いている間だけ document.body に overflow: hidden を適用し、背景のスクロールを止める。
  */
 
 import { render } from './render.js'
@@ -20,23 +24,6 @@ import {
 import { setTheme } from './theme.js'
 import { Theme } from './types/types.js'
 
-/**
- * [検証用A] iOS Safariに上下の帯の色を再判定させるための実験的な処理。
- * パネル自体は開いたまま(display: flex)でも、<body>のdisplayを一瞬none→元に戻す
- * ことで、大きなレイアウト変化(強制リフロー)を発生させ、それが
- * 色の再判定のきっかけになるかどうかを確認する。
- */
-function forceReflowHack (): void {
-  const original = document.body.style.display
-  document.body.style.display = 'none'
-  // 強制的に同期リフローを発生させる(この行自体に意味があり、削除すると効果が無くなる)。
-  void document.body.offsetHeight
-  document.body.style.display = original
-}
-
-/**
- * 設定パネルを初期化する。
- */
 export function initSettings (): void {
   const toggleBtn = document.getElementById('settingsToggle')
   const overlayEl = document.getElementById('settingsOverlay')
@@ -58,6 +45,7 @@ export function initSettings (): void {
   function openSettings (): void {
     overlay.classList.add('is-open')
     overlay.setAttribute('aria-hidden', 'false')
+    document.body.style.overflow = 'hidden'
     updateSwatchSelection()
     if (jumpToggleEl instanceof HTMLInputElement) {
       jumpToggleEl.checked = jumpToLatestOnUpdate
@@ -67,6 +55,7 @@ export function initSettings (): void {
   function closeSettings (): void {
     overlay.classList.remove('is-open')
     overlay.setAttribute('aria-hidden', 'true')
+    document.body.style.overflow = ''
   }
 
   toggleBtn.addEventListener('click', openSettings)
@@ -75,6 +64,8 @@ export function initSettings (): void {
     closeBtn.addEventListener('click', closeSettings)
   }
 
+  // [検証A v2] オーバーレイ(背景の半透明の部分)自体をクリックしたら閉じる。
+  // オーバーレイが実体としてDOM上にあるため、この単純な判定で確実に検知できる。
   overlay.addEventListener('click', (e) => {
     if (e.target === overlay) {
       closeSettings()
@@ -87,7 +78,6 @@ export function initSettings (): void {
       if (theme === 'amber' || theme === 'lime') {
         setTheme(theme as Theme)
         updateSwatchSelection()
-        forceReflowHack()
       }
     })
   })
