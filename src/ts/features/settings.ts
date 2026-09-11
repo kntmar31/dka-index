@@ -112,15 +112,4 @@ export function initSettings (): void {
       render(searchQuery)
     })
   }
-
-  // 検証用: 以前のヘッダー内テーマ切り替えボタンを一時的に復活させる。
-  // iOS Safariのステータスバー色残り問題が、画面端(ヘッダー)を直接操作した時だけ
-  // 直るのかどうかを確認するための一時的な実装。
-  const themeToggleBtn = document.getElementById('themeToggleBtn')
-  if (themeToggleBtn !== null) {
-    themeToggleBtn.addEventListener('click', () => {
-      setTheme(currentTheme === 'lime' ? 'amber' : 'lime')
-      updateSwatchSelection()
-    })
-  }
 }
