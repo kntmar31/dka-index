@@ -1,6 +1,7 @@
 // =============================================================
 // styles.scss
-// [検証A] 現行版のCSSと同一(このスナップショットではJS側のみ変更している)。
+// [検証A v2] .settings-overlay を復活させるが、top: var(--header-h) にして
+// ヘッダーの高さ分だけ上を空け、ヘッダー以下の領域だけを覆う点が現行版と異なる。
 // =============================================================
 
 $color-paper: #eee9dc;
@@ -534,11 +535,17 @@ footer {
   border-radius: 999px;
 }
 
+// [検証A v2] ヘッダーの高さ分(--header-h)だけ上を空け、ヘッダー以下の領域だけを
+// 覆うオーバーレイ。ヘッダー自体は覆わないため、iOS Safariの上下の帯の色残り問題が
+// ヘッダーの見え方に影響しないかどうかを確認する狙い。
 .settings-overlay {
   display: none;
   position: fixed;
-  inset: 0;
-  z-index: 200;
+  top: var(--header-h, 140px);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 200; // アクションバー・更新通知よりさらに上に表示する
   align-items: center;
   justify-content: center;
   background: rgba(0, 0, 0, 0.35);
