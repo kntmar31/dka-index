@@ -1,11 +1,23 @@
 /**
  * settings.ts
  *
- * [検証B v3] .settings-overlay(画面全体を覆う要素)を廃止し、パネル本体だけを
+ * [検証B v4] .settings-overlay(画面全体を覆う要素)を廃止し、パネル本体だけを
  * fixed配置している。画面を覆う要素がないため「パネル外側タップで閉じる」を
  * 従来のオーバーレイのクリックイベントでは実現できない。代わりに、
- * document全体のクリックを監視し、クリック位置がパネルの外側かどうかを
+ * documentのpointerdownを監視し、押した位置がパネルの外側かどうかを
  * JavaScriptだけで判定して閉じる(新しい要素をDOMに追加しない)。
+ *
+ * click ではなく pointerdown を使っているのは、iOS Safariでは document レベルの
+ * click イベントが「明確にクリック可能な要素(独自のクリックハンドラを持つ要素など)」を
+ * 経由しないと確実にバブリングしない癖があり、話数一覧の背景など単なる表示用の
+ * 要素をタップした場合に click が document まで届かないことがあるため。
+ * pointerdown はタップ・クリックのどちらでも即座かつ確実に発火し、この種の癖の
+ * 影響を受けにくい。また pointerdown は click より先に発火するため、
+ * リンクをタップした場合もリンク自体の遷移(新しいタブで開く)は妨げず、
+ * パネルを閉じる処理だけを先に済ませられる。
+ *
+ * また、パネル表示中は背後の一覧がスクロールできてしまうと使い勝手が悪いため、
+ * 開いている間だけ document.body に overflow: hidden を適用し、背景のスクロールを止める。
  */
 
 import { render } from './render.js'
@@ -42,6 +54,7 @@ export function initSettings (): void {
   function openSettings (): void {
     overlay.classList.add('is-open')
     overlay.setAttribute('aria-hidden', 'false')
+    document.body.style.overflow = 'hidden'
     updateSwatchSelection()
     if (jumpToggleEl instanceof HTMLInputElement) {
       jumpToggleEl.checked = jumpToLatestOnUpdate
@@ -51,6 +64,7 @@ export function initSettings (): void {
   function closeSettings (): void {
     overlay.classList.remove('is-open')
     overlay.setAttribute('aria-hidden', 'true')
+    document.body.style.overflow = ''
   }
 
   toggleBtn.addEventListener('click', openSettings)
@@ -59,11 +73,11 @@ export function initSettings (): void {
     closeBtn.addEventListener('click', closeSettings)
   }
 
-  // [検証B v3] パネルを覆う背景要素が無いため、document全体のクリックを見て
-  // 「開いている状態で、パネルの外側(かつ設定ボタン自体でもない)をクリックしたか」を
+  // [検証B v4] パネルを覆う背景要素が無いため、documentのpointerdownを見て
+  // 「開いている状態で、パネルの外側(かつ設定ボタン自体でもない)を押したか」を
   // 判定し、該当すれば閉じる。新しい要素はDOMに追加しないため、画面を覆う要素が
   // 原因だったiOS Safariの色残り問題には影響しないはず。
-  document.addEventListener('click', (e) => {
+  document.addEventListener('pointerdown', (e) => {
     if (!overlay.classList.contains('is-open')) return
     const target = e.target as Node
     if (overlay.contains(target)) return
