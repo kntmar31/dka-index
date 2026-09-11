@@ -615,17 +615,19 @@ footer {
 // ヘッダーの歯車ボタン(.settings-toggle)から開く。見た目はアクションバーの
 // カードなどと同じ白背景(state-card/action-bar-card系)を踏襲する。
 //
-// [検証用] .settings-overlay は以前 opacity/pointer-events だけで開閉していたが、
-// 画面全体を覆う透明要素が閉じている間もDOM上に(display: flexの状態で)存在し続けており、
-// これがiOS Safariの上下の帯の色再判定を妨げているのではという仮説を検証するため、
-// 閉じている間は display: none にして完全にDOMの影響を無くす形に変更した。
-// この変更により、パネルの開閉時のフェード+スケールのアニメーションは失われる
-// (display: none からの切り替えでは transition が効かないため)。
+// .settings-overlay は、ヘッダーの高さ分(--header-h)だけ上を空け、
+// ヘッダー以下の領域だけを覆う形にしている(inset: 0 ではなく top: var(--header-h))。
+// これは、iOS Safariの上下の帯の色残り問題について、画面全体(ヘッダーを含む)を
+// 覆う要素が存在することが原因ではないかという仮説を検証した結果、
+// ヘッダーを覆わない形にすることで改善が確認できたための対応。
 // -------------------------------------------------------------
 .settings-overlay {
   display: none;
   position: fixed;
-  inset: 0;
+  top: var(--header-h, 140px);
+  left: 0;
+  right: 0;
+  bottom: 0;
   z-index: 200; // アクションバー・更新通知よりさらに上に表示する
   align-items: center;
   justify-content: center;
