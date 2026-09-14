@@ -18,9 +18,7 @@
   "ts-standard": {
     "project": "./tsconfig.json",
     "ignore": [
-      "legacy-old-30/**",
-      "experiment-a/**",
-      "experiment-b/**"
+      "preview/**"
     ]
   }
 }
