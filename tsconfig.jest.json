@@ -3,7 +3,9 @@
   "compilerOptions": {
     "module": "Node16",
     "moduleResolution": "Node16",
-    "isolatedModules": true
+    "isolatedModules": true,
+    "rootDir": "."
   },
+  "include": ["src/ts/**/*.ts", "tests/**/*.ts"],
   "exclude": []
 }

@@ -4,7 +4,7 @@
  * fetchEpisodesAndCount() の正常系・異常系を fetch をモックして検証する。
  */
 
-import { fetchEpisodesAndCount } from './gas.js'
+import { fetchEpisodesAndCount } from '../../../src/ts/features/apis/gas.js'
 
 function mockFetchResolvedValue (value: { ok: boolean, status?: number, json?: () => Promise<unknown> }): void {
   global.fetch = jest.fn().mockResolvedValue(value) as unknown as typeof fetch

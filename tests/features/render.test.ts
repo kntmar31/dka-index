@@ -4,8 +4,8 @@
  * テストのために export した groupData()・escapeHtml() の単体テスト。
  */
 
-import { escapeHtml, groupData } from './render.js'
-import { Episode } from './types/types.js'
+import { escapeHtml, groupData } from '../../src/ts/features/render.js'
+import { Episode } from '../../src/ts/features/types/types.js'
 
 describe('groupData', () => {
   it('20話ごとにグループ化する', () => {

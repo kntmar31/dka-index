@@ -16,7 +16,7 @@ import {
   setLastReadNum,
   setSortOrder,
   STORAGE_KEY
-} from './storage.js'
+} from '../../src/ts/features/storage.js'
 
 describe('storage', () => {
   beforeEach(() => {

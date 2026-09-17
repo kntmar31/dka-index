@@ -7,8 +7,8 @@
  * 一切依存しないためこれで問題ない。
  */
 
-import { getNextUnreadNum } from './scroll.js'
-import { setLastReadNum, setSortOrder } from './storage.js'
+import { getNextUnreadNum } from '../../src/ts/features/scroll.js'
+import { setLastReadNum, setSortOrder } from '../../src/ts/features/storage.js'
 
 describe('getNextUnreadNum', () => {
   it('lastReadNumが未設定(null)の場合はnullを返す', () => {
