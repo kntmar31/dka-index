@@ -32,6 +32,9 @@ jobs:
       - name: Lint (ts-standard)
         run: npm run lint
 
+      - name: Test (Jest)
+        run: npm test
+
       - name: Build (TypeScript + SCSS, inject GAS_API_URL)
         env:
           GAS_API_URL: ${{ secrets.GAS_API_URL }}

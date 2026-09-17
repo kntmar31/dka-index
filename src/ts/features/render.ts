@@ -44,7 +44,7 @@ export function handleListClick (e: MouseEvent): void {
  * @param items グループ化対象の話一覧(num昇順)
  * @returns 20話ごとに区切られたグループの配列
  */
-function groupData (items: Episode[]): EpisodeGroup[] {
+export function groupData (items: Episode[]): EpisodeGroup[] {
   const groups: EpisodeGroup[] = []
   let current: EpisodeGroup | null = null
 
@@ -66,7 +66,7 @@ function groupData (items: Episode[]): EpisodeGroup[] {
  * @param s エスケープ対象の文字列(undefined/nullは空文字扱い)
  * @returns エスケープ後の文字列
  */
-function escapeHtml (s: string | undefined | null): string {
+export function escapeHtml (s: string | undefined | null): string {
   const map: Record<string, string> = {
     '&': '&amp;',
     '<': '&lt;',
